@@ -91,9 +91,9 @@ Two-point conversions, missed kicks.
 
 - Ties: pool the prize money of every place the tied owners occupy and split equally.
   Example: tie for 2nd = (28 + 22) / 2 = $25 each.
-- Split shares (PENDING CONFIRMATION): the commissioner's historical practice is exact cents, with leftover
-  pennies assigned so payouts always equal the pot (2025 wk 13: $10 / 3 = 3.33, 3.33, 3.34;
-  2025 wk 15: $23 / 3 = 7.66, 7.67, 7.67). The earlier "round up to $1" choice would overpay the pot.
+- Split shares are exact to the cent, with leftover pennies assigned so payouts always equal the
+  pot (2025 wk 13: $10 / 3 = 3.33, 3.33, 3.34; 2025 wk 15: $23 / 3 = 7.66, 7.67, 7.67). This is the
+  commissioner's historical method.
 - Weekly checksum: pot − total payouts must equal $0.00 before a week can finalize (matches the
   sheet's CHKSUM row).
 - Ledger per owner: entry fees owed (−$10/week), winnings, net.
@@ -138,6 +138,6 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
   blocked if any player whose game is final has no stat line.
 
 ## Open questions
-- Tie splits: adopt the historical exact-cents method (above) instead of rounding up?
+- Tie splits: which tied owner(s) receive the leftover penny? (Default: alphabetical by owner ID.)
 - Playoffs: the active-lineup positions after a swap — must the 8 active players always fill
   QB / RB×2 / WR-TE×3 / K / DEF, or can a reserve of any position replace any player?
