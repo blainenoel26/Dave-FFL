@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,7 +19,11 @@ export async function sendCode(_prev: LoginState, form: FormData): Promise<Login
   if (checkError) return { step: "email", error: "Couldn't reach the league server. Try again." };
   if (!isMember) return { step: "email", error: "That email isn't on the league roster." };
 
-  const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  const origin = (await headers()).get("origin") ?? "";
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true, emailRedirectTo: `${origin}/auth/callback` },
+  });
   if (error) return { step: "email", error: error.message };
 
   return { step: "code", email };

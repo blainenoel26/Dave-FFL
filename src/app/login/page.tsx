@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useActionState } from "react";
 import { sendCode, verifyCode, type LoginState } from "./actions";
 
 async function loginAction(prev: LoginState, form: FormData): Promise<LoginState> {
@@ -9,7 +10,21 @@ async function loginAction(prev: LoginState, form: FormData): Promise<LoginState
 }
 
 export default function LoginPage() {
-  const [state, action, pending] = useActionState(loginAction, { step: "email" });
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const linkFailed = useSearchParams().get("error") === "link";
+  const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, {
+    step: "email",
+    error: linkFailed
+      ? "That sign-in link didn't work. Open it on the same device and browser you requested it from, or request a new one."
+      : undefined,
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
@@ -18,7 +33,7 @@ export default function LoginPage() {
         <p className="mt-1 text-sm text-muted">
           {state.step === "email"
             ? "Sign in with the email you use for the league."
-            : `We emailed a code to ${state.email}.`}
+            : `Check ${state.email}. Tap the sign-in link in the email on this device, or enter the code if the email has one.`}
         </p>
       </div>
 
@@ -49,7 +64,7 @@ export default function LoginPage() {
         {state.error && <p className="text-sm text-danger">{state.error}</p>}
 
         <button type="submit" disabled={pending} className="btn-primary">
-          {pending ? "Working…" : state.step === "email" ? "Send code" : "Sign in"}
+          {pending ? "Working…" : state.step === "email" ? "Email me a sign-in link" : "Sign in with code"}
         </button>
 
         {state.step === "code" && (

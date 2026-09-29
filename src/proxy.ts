@@ -1,10 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/auth/callback"];
 
 // Refreshes the Supabase session cookie on every request and sends signed-out visitors to /login.
 export async function proxy(request: NextRequest) {
+  // Supabase falls back to the Site URL (/) when the callback URL isn't allow-listed.
+  if (request.nextUrl.searchParams.has("code") && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
