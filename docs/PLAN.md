@@ -39,6 +39,11 @@ swapped without touching scoring.
 
 Totals and payouts are always derived from lineups + stats, never entered by hand.
 
+## Status
+- Done: Next.js 16 + TypeScript + Tailwind scaffold, Vitest; lineup validation/totals and payout
+  engine (`src/lib/league/`) with golden tests for 2026 weeks 1–3 and the 2025 penny splits.
+- Next: Supabase project + schema, magic-link login, player/schedule import.
+
 ## Phases
 1. **Foundation** — repo scaffold, Supabase schema + migrations, magic-link login, owner roster,
    nightly import of NFL players and schedule.

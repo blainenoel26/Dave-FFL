@@ -13,3 +13,7 @@ out/
 coverage/
 *.log
 .vercel/
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+*.pem

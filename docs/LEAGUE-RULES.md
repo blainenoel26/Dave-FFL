@@ -121,6 +121,10 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
 - Reserves can be named or changed at any time.
 - After a round is completed (Wild Card, Divisional, Conference Championships), an owner can swap a
   reserve in for any active player, eliminated or not. Swaps lock at the next round's first kickoff.
+- The active lineup always keeps the regular-season structure: 1 QB, 2 RB, 3 WR/TE, 1 K, 1 DEF.
+  A reserve can only replace a player in a slot it is eligible for. Eliminated players stay in their
+  slot (scoring nothing) until swapped out, so a late-round lineup may effectively have no live QB
+  or only two live WRs.
 - A player's points count only for the rounds in which that player was active on the owner's
   roster; points already earned are never removed.
 - One doubled non-QB pick. The doubler can be moved after each completed round; doubling applies to
@@ -139,5 +143,3 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
 
 ## Open questions
 - Tie splits: which tied owner(s) receive the leftover penny? (Default: alphabetical by owner ID.)
-- Playoffs: the active-lineup positions after a swap — must the 8 active players always fill
-  QB / RB×2 / WR-TE×3 / K / DEF, or can a reserve of any position replace any player?
