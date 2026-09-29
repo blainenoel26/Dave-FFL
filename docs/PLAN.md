@@ -39,10 +39,21 @@ swapped without touching scoring.
 
 Totals and payouts are always derived from lineups + stats, never entered by hand.
 
-## Status
+## Status (2026-09-29)
 - Done: Next.js 16 + TypeScript + Tailwind scaffold, Vitest; lineup validation/totals and payout
   engine (`src/lib/league/`) with golden tests for 2026 weeks 1–3 and the 2025 penny splits.
-- Next: Supabase project + schema, magic-link login, player/schedule import.
+- Done: Supabase project created; migrations 0001 and 0002 applied; 12 owners seeded from
+  `private/seed-owners.sql`; `.env.local` has URL + publishable key.
+- Done: sign-in (`src/app/login`, `src/app/auth/callback`, `src/proxy.ts`). Sign-in link verified
+  end to end locally. Emailed 6-digit codes are wired up but need custom SMTP: Supabase won't let
+  free projects edit email templates on the built-in sender.
+- Next:
+  1. Owner adds `SUPABASE_SECRET_KEY` to `.env.local` (never pasted in chat).
+  2. ESPN adapter + import of players, teams and the 2026 schedule.
+  3. Weekly lineup picker.
+  4. Custom SMTP (Resend if the league has a domain, otherwise Gmail app password), then edit the
+     Magic Link / Confirm signup templates to include `{{ .Token }}`.
+  5. Vercel deploy; add the production URL to Supabase Auth → URL Configuration.
 
 ## Phases
 1. **Foundation** — repo scaffold, Supabase schema + migrations, magic-link login, owner roster,
