@@ -1,0 +1,15 @@
+# Private league data: owner names, emails, raw sheets. Never commit.
+private/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+coverage/
+*.log
+.vercel/
