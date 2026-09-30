@@ -49,9 +49,12 @@ Totals and payouts are always derived from lineups + stats, never entered by han
   free projects edit email templates on the built-in sender.
 - Done: scoring engine (`src/lib/scoring/`): rules as data, ESPN summary parser, scorer.
   Validated against the 2026 sheet weeks 1–3; disputed values listed in `espn.test.ts`.
+- Done: `npm run import:nfl` loaded 32 teams, 851 players (incl. 32 DEF) and 272 games.
+- Done: deployed at https://dave-ffl.vercel.app (Vercel, production branch `main`, env vars set;
+  `vercel.json` pins the Next.js preset).
 - Next:
-  1. Owner adds `SUPABASE_SECRET_KEY` to `.env.local` (never pasted in chat).
-  2. Import players, teams and the 2026 schedule from ESPN into Supabase.
+  1. Supabase Auth → URL Configuration: Site URL = https://dave-ffl.vercel.app; redirect URLs
+     include https://dave-ffl.vercel.app/auth/callback and http://localhost:3000/auth/callback.
   3. Weekly lineup picker.
   4. Custom SMTP via a league Gmail account + app password (the league has no domain), then edit
      the Magic Link / Confirm signup templates to include `{{ .Token }}`.
