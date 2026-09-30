@@ -42,6 +42,9 @@ body {
 }
 
 @layer components {
+  .page {
+    @apply mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-6;
+  }
   .card {
     @apply rounded-xl border border-border bg-surface p-4;
   }
