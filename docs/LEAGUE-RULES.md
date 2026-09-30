@@ -36,7 +36,10 @@ per-season configuration, not hard-coded.
 | 300+ passing yards | 4 |
 | Each completed 25 yds past 300 | 1 |
 
-Passing yards under 300 score nothing. No negative points for interceptions or fumbles.
+| Each interception thrown | -1 |
+
+Passing yards under 300 score nothing. Fumbles lost are not penalized. (The interception rule was
+inferred from the 2026 sheet: every QB score in weeks 1–3 matches it — pending league confirmation.)
 
 ### Rushing and receiving (QB, RB, WR, TE) — scored separately
 | Event | Pts |
@@ -80,6 +83,12 @@ Points allowed = all points the opponent scored, including TDs by our offense or
 Tiers are not cumulative.
 
 A kick or punt return TD by the opponent counts toward points allowed; it is not a Defensive TD.
+
+### Stat source and edge cases
+- Official stats: ESPN's box score and scoring plays for each game; the commissioner can override.
+- Lateral touchdowns: the passer and the player who scores both get a TD of the full play length;
+  the play is flagged for commissioner review.
+- A player who doesn't play scores 0.
 
 ### Not scored
 Two-point conversions, missed kicks.
