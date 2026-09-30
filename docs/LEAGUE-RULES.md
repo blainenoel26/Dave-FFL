@@ -38,8 +38,8 @@ per-season configuration, not hard-coded.
 
 | Each interception thrown | -1 |
 
-Passing yards under 300 score nothing. Fumbles lost are not penalized. (The interception rule was
-inferred from the 2026 sheet: every QB score in weeks 1–3 matches it — pending league confirmation.)
+Passing yards under 300 score nothing. Fumbles lost are not penalized. The interception penalty
+applies to any player who throws one.
 
 ### Rushing and receiving (QB, RB, WR, TE) — scored separately
 | Event | Pts |
@@ -149,6 +149,13 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
   and triggers a recalculation and notification.
 - Totals are always computed from the saved lineup rows, never stored separately. Finalization is
   blocked if any player whose game is final has no stat line.
+
+## For the commissioner to confirm (summarize before launch)
+- ESPN box score as the official stat source, with commissioner overrides.
+- Six 2026 weeks 1–3 scores where ESPN + the written rules differ from the sheet by 1–2 points
+  (listed in `src/lib/scoring/espn.test.ts` → DISPUTED). Paid weeks stay as paid.
+- Lateral touchdowns scored at the full play length.
+- Return yards as their own category; the −1 per interception rule applying to any passer.
 
 ## Open questions
 - Tie splits: which tied owner(s) receive the leftover penny? (Default: alphabetical by owner ID.)
