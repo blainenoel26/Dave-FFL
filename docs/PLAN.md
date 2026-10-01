@@ -39,7 +39,7 @@ swapped without touching scoring.
 
 Totals and payouts are always derived from lineups + stats, never entered by hand.
 
-## Status (2026-09-29)
+## Status (2026-10-01)
 - Done: Next.js 16 + TypeScript + Tailwind scaffold, Vitest; lineup validation/totals and payout
   engine (`src/lib/league/`) with golden tests for 2026 weeks 1–3 and the 2025 penny splits.
 - Done: Supabase project created; migrations 0001 and 0002 applied; 12 owners seeded from
@@ -52,13 +52,15 @@ Totals and payouts are always derived from lineups + stats, never entered by han
 - Done: `npm run import:nfl` loaded 32 teams, 851 players (incl. 32 DEF) and 272 games.
 - Done: deployed at https://dave-ffl.vercel.app (Vercel, production branch `main`, env vars set;
   `vercel.json` pins the Next.js preset).
+- Done: weekly lineup picker (`/picks`, migration 0003 `save_lineup`), all-lineups page with live
+  ESPN scoring, standings and provisional payouts (`/lineups`). Sign-in links use the implicit flow
+  (`/auth/confirm`) so they work in any browser.
 - Next:
-  1. Supabase Auth → URL Configuration: Site URL = https://dave-ffl.vercel.app; redirect URLs
-     include https://dave-ffl.vercel.app/auth/callback and http://localhost:3000/auth/callback.
-  3. Weekly lineup picker.
-  4. Custom SMTP via a league Gmail account + app password (the league has no domain), then edit
-     the Magic Link / Confirm signup templates to include `{{ .Token }}`.
-  5. Vercel deploy; add the production URL to Supabase Auth → URL Configuration.
+  1. Finalize weeks: persist week_results + ledger after MNF; commissioner overrides through Wednesday.
+  2. Season ledger page and end-of-season settle-up.
+  3. League Gmail SMTP → 6-digit codes, pick reminders and weekly result emails.
+  4. Import 2025 + 2026 weeks 1–3 history; parallel run, then cutover.
+  5. Playoffs (by mid-January).
 
 ## Phases
 1. **Foundation** — repo scaffold, Supabase schema + migrations, magic-link login, owner roster,
