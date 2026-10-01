@@ -55,8 +55,12 @@ Totals and payouts are always derived from lineups + stats, never entered by han
 - Done: weekly lineup picker (`/picks`, migration 0003 `save_lineup`), all-lineups page with live
   ESPN scoring, standings and provisional payouts (`/lineups`). Sign-in links use the implicit flow
   (`/auth/confirm`) so they work in any browser.
+- Done: week finalization (`src/lib/league/finalize.ts`), daily Vercel cron (`/api/cron/finalize`,
+  09:00 UTC, needs `CRON_SECRET` in Vercel), commissioner page (`/commish`: finalize now,
+  point corrections, parser warnings), week browsing (`/lineups?week=N`). Weeks 1–3 marked closed
+  (run on the sheet; history import pending). First real finalization: week 4, Mon 2026-10-05.
 - Next:
-  1. Finalize weeks: persist week_results + ledger after MNF; commissioner overrides through Wednesday.
+  1. Commissioner lineup fixes (edit an owner's lineup after a mistake), if the league wants it.
   2. Season ledger page and end-of-season settle-up.
   3. League Gmail SMTP → 6-digit codes, pick reminders and weekly result emails.
   4. Import 2025 + 2026 weeks 1–3 history; parallel run, then cutover.
