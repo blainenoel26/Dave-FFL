@@ -3,6 +3,7 @@ import { rejectUnlessCron } from "@/lib/cron";
 import { sendWeekResults } from "@/lib/email/league";
 import { emailConfigured } from "@/lib/email/send";
 import { CLOSE_AFTER_MS, finalizeWeek } from "@/lib/league/finalize";
+import { finalizePlayoffs } from "@/lib/playoffs/finalize";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Runs daily (vercel.json → crons). Finalizes weeks whose games are all final, emails the results
@@ -49,6 +50,13 @@ export async function GET(request: NextRequest) {
         report[`week ${week.number}`] += `, results email failed: ${(e as Error).message}`;
       }
     }
+  }
+
+  // Playoffs: once the Super Bowl is final, record entry fees and winnings (until it's done).
+  const { data: superBowl } = await admin.from("weeks").select("status").eq("kind", "playoff").eq("number", 4).maybeSingle();
+  if (superBowl && superBowl.status !== "final" && superBowl.status !== "closed") {
+    const outcome = await finalizePlayoffs(admin);
+    report.playoffs = outcome.status === "finalized" ? "finalized" : `skipped: ${outcome.reason}`;
   }
 
   return NextResponse.json({ ok: true, report });

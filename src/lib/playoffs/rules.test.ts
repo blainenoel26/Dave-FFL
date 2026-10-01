@@ -63,6 +63,14 @@ describe("validateRosterChange", () => {
     expect(validateRosterChange(roster(), after, ctx({ played: ["qb1"] }))).toEqual([]);
   });
 
+  it("also lets a reserve swap in for a player who hasn't played yet, mid-round", () => {
+    const after = roster({
+      actives: { ...roster().actives, QB: "qb2" },
+      reserves: { R1: { playerId: "qb1", used: true }, R2: { playerId: "wr4", used: false } },
+    });
+    expect(validateRosterChange(roster(), after, ctx({ played: ["rb1"], roundInProgress: true }))).toEqual([]);
+  });
+
   it("requires the swapped-out player to go to the reserve spot", () => {
     const after = roster({
       actives: { ...roster().actives, QB: "qb2" },

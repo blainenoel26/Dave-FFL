@@ -44,13 +44,19 @@ async function getJson<T>(url: string, revalidate: number): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function getWeekScores(season: number, week: number, rules: ScoringRules): Promise<WeekScores> {
+/** Scores for an ESPN week: seasonType 2 = regular season, 3 = postseason (ESPN week 5 = Super Bowl). */
+export async function getWeekScores(
+  season: number,
+  week: number,
+  rules: ScoringRules,
+  seasonType: 2 | 3 = 2,
+): Promise<WeekScores> {
   const board = await getJson<{ events: ScoreboardEvent[] }>(
-    `${ESPN}/scoreboard?seasontype=2&week=${week}&dates=${season}`,
+    `${ESPN}/scoreboard?seasontype=${seasonType}&week=${week}&dates=${season}`,
     LIVE_SECONDS,
   );
 
-  const games: LiveGame[] = board.events.map((e) => {
+  const games: LiveGame[] = (board.events ?? []).map((e) => {
     const c = e.competitions[0];
     const home = c.competitors.find((t) => t.homeAway === "home")!;
     const away = c.competitors.find((t) => t.homeAway === "away")!;

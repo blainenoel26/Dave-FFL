@@ -14,6 +14,13 @@ if (!season) throw new Error("usage: import-nfl.mjs <season> [--dry-run]");
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
 const REGULAR_SEASON_WEEKS = 18;
+// Playoff rounds and ESPN's postseason week numbers (ESPN week 4 is the Pro Bowl, skipped).
+const PLAYOFF_ROUNDS = [
+  { number: 1, espnWeek: 1, label: "Wild Card" },
+  { number: 2, espnWeek: 2, label: "Divisional" },
+  { number: 3, espnWeek: 3, label: "Conference Championships" },
+  { number: 4, espnWeek: 5, label: "Super Bowl" },
+];
 
 const POSITIONS = { QB: "QB", RB: "RB", FB: "RB", WR: "WR", TE: "TE", PK: "K", K: "K" };
 const GAME_STATUS = {
@@ -59,16 +66,30 @@ for (const team of teamList) {
   });
 }
 
+const weekDefs = [
+  ...Array.from({ length: REGULAR_SEASON_WEEKS }, (_, i) => ({
+    kind: "regular", number: i + 1, label: `Week ${i + 1}`, espnType: 2, espnWeek: i + 1,
+  })),
+  ...PLAYOFF_ROUNDS.map((r) => ({ kind: "playoff", number: r.number, label: r.label, espnType: 3, espnWeek: r.espnWeek })),
+];
+const teamIds = new Set(teams.map((t) => t.id));
+
 const schedule = [];
-for (let week = 1; week <= REGULAR_SEASON_WEEKS; week++) {
-  const board = await espn(`/scoreboard?seasontype=2&week=${week}&dates=${season}`);
-  for (const event of board.events) {
+let pendingPlayoffGames = 0;
+for (const def of weekDefs) {
+  const board = await espn(`/scoreboard?seasontype=${def.espnType}&week=${def.espnWeek}&dates=${season}`);
+  for (const event of board.events ?? []) {
     const c = event.competitions[0];
     const home = c.competitors.find((t) => t.homeAway === "home");
     const away = c.competitors.find((t) => t.homeAway === "away");
+    if (!teamIds.has(home.team.abbreviation) || !teamIds.has(away.team.abbreviation)) {
+      pendingPlayoffGames++; // matchup not decided yet (TBD)
+      continue;
+    }
     const statusName = c.status.type.name;
     schedule.push({
-      week,
+      kind: def.kind,
+      week: def.number,
       game: {
         id: event.id,
         home_team: home.team.abbreviation,
@@ -86,7 +107,7 @@ const byPosition = {};
 for (const p of players.values()) byPosition[p.position] = (byPosition[p.position] ?? 0) + 1;
 console.log(`teams: ${teams.length}`);
 console.log(`players: ${players.size}`, byPosition);
-console.log(`games: ${schedule.length} across ${REGULAR_SEASON_WEEKS} weeks`);
+console.log(`games: ${schedule.length} (${schedule.filter((g) => g.kind === "playoff").length} playoff, ${pendingPlayoffGames} playoff games not set yet)`);
 if (dryRun) process.exit(0);
 
 // ── Write ───────────────────────────────────────────────────────────────────
@@ -116,12 +137,7 @@ const { data: seasonRow, error: seasonError } = await db
   .single();
 if (seasonError) throw new Error(`season ${season}: ${seasonError.message}`);
 
-const weekRows = Array.from({ length: REGULAR_SEASON_WEEKS }, (_, i) => ({
-  season_id: seasonRow.id,
-  kind: "regular",
-  number: i + 1,
-  label: `Week ${i + 1}`,
-}));
+const weekRows = weekDefs.map((d) => ({ season_id: seasonRow.id, kind: d.kind, number: d.number, label: d.label }));
 const { error: weeksError } = await db
   .from("weeks")
   .upsert(weekRows, { onConflict: "season_id,kind,number", ignoreDuplicates: true });
@@ -129,15 +145,14 @@ if (weeksError) throw new Error(`weeks: ${weeksError.message}`);
 
 const { data: weeks, error: readWeeksError } = await db
   .from("weeks")
-  .select("id, number")
-  .eq("season_id", seasonRow.id)
-  .eq("kind", "regular");
+  .select("id, kind, number")
+  .eq("season_id", seasonRow.id);
 if (readWeeksError) throw new Error(`weeks: ${readWeeksError.message}`);
-const weekId = new Map(weeks.map((w) => [w.number, w.id]));
+const weekId = new Map(weeks.map((w) => [`${w.kind}-${w.number}`, w.id]));
 
 await upsert(
   "nfl_games",
-  schedule.map(({ week, game }) => ({ ...game, week_id: weekId.get(week) })),
+  schedule.map(({ kind, week, game }) => ({ ...game, week_id: weekId.get(`${kind}-${week}`) })),
   "id",
 );
 

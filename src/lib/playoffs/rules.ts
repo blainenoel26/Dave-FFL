@@ -89,8 +89,16 @@ export function validateRosterChange(before: PlayoffRoster, after: PlayoffRoster
       } else {
         swappedIn.delete(into!);
       }
-    } else if (into && ctx.roundGameStarted(into)) {
-      errors.push(`${slot}: that player's game has already started`);
+    } else {
+      if (into && ctx.roundGameStarted(into)) errors.push(`${slot}: that player's game has already started`);
+      // A reserve can also be swapped in for a player who hasn't played yet.
+      const spot = into ? swappedIn.get(into) : undefined;
+      if (spot) {
+        if (after.reserves[spot].playerId !== (out ?? null)) {
+          errors.push(`The player swapped out of ${slot} must move to reserve ${spot}`);
+        }
+        swappedIn.delete(into!);
+      }
     }
   }
   for (const [, spot] of swappedIn) errors.push(`Reserve ${spot} is marked used but wasn't swapped in`);

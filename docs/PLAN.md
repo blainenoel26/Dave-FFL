@@ -66,10 +66,15 @@ Totals and payouts are always derived from lineups + stats, never entered by han
 - Done: league email via Gmail app password (Vercel `GMAIL_USER`/`GMAIL_APP_PASSWORD`; Supabase custom
   SMTP + 6-digit code templates). Reminders (cron Thu/Sun 16:00 UTC) and results emails go only to
   owners who have signed in at least once. Commissioner lineup fixes at `/commish/lineup`.
+- Done: playoff contest (`/playoffs`, `src/lib/playoffs/`, migration 0004): roster versions, rules
+  check (server + browser), cumulative standings with eliminations, percentage payouts, and the
+  nightly job records playoff fees/winnings after the Super Bowl. Scoring checked against the
+  2024–25 playoffs (58/61 round scores match the league's sheet).
 - Next:
-  1. Rollout: tell the league, owners sign in; parallel run alongside the sheet, then cutover.
-  2. Summary of rule decisions for the commissioner to confirm (see LEAGUE-RULES.md).
-  3. Playoffs (by mid-January).
+  1. Rollout: announcement (`private/announcement-email.md`), week 5 parallel run, cutover week 6.
+  2. Commissioner confirms rules (`private/commissioner-summary.md`).
+  3. Playoffs, January: re-run `npm run import:nfl` after Week 18 and after each round to load
+     matchups; commissioner tools for playoff corrections/roster fixes if needed.
 
 ## Phases
 1. **Foundation** — repo scaffold, Supabase schema + migrations, magic-link login, owner roster,

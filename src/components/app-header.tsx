@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/picks", label: "Picks" },
   { href: "/lineups", label: "Lineups" },
   { href: "/money", label: "Money" },
+  { href: "/playoffs", label: "Playoffs" },
 ];
 
 export async function AppHeader() {
