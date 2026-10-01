@@ -1,6 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { SaveResult } from "@/app/picks/actions";
+import { validateLineup, type LineupPick, type Position, type Slot } from "@/lib/league/lineup";
 import { sendWeekResults } from "@/lib/email/league";
 import { emailConfigured, sendEmails, siteUrl } from "@/lib/email/send";
 import { finalizeWeek } from "@/lib/league/finalize";
@@ -95,4 +98,66 @@ export async function overrideAction(form: FormData) {
       ? "Correction saved. Results and payouts were recalculated."
       : `Correction saved, but results weren't recalculated: ${outcome.reason}.`,
   );
+}
+
+/**
+ * Replaces an owner's lineup for a week, ignoring kickoff locks (for fixing mistakes). Positions and
+ * the one-x2 rule still apply. Logged to the audit trail; a finalized week is recalculated.
+ */
+export async function commishSaveLineup(
+  ownerId: string,
+  weekId: number,
+  picks: Partial<Record<Slot, string>>,
+  doubledSlot: Slot | null,
+): Promise<SaveResult> {
+  const owner = await getCurrentOwner();
+  if (owner?.role !== "commissioner") return { ok: false, error: "Commissioner only" };
+
+  const admin = createAdminClient();
+  const { data: week } = await admin.from("weeks").select("number, status").eq("id", weekId).single();
+  if (!week) return { ok: false, error: "Unknown week" };
+  if (week.status === "closed") return { ok: false, error: "This week is closed." };
+
+  const ids = Object.values(picks).filter((id): id is string => Boolean(id));
+  const { data: players } = await admin.from("nfl_players").select("id, position").in("id", ids);
+  const positionOf = new Map((players ?? []).map((p) => [p.id, p.position as Position]));
+  const lineup: LineupPick[] = Object.entries(picks)
+    .filter((entry): entry is [Slot, string] => Boolean(entry[1]))
+    .map(([slot, playerId]) => ({
+      slot,
+      playerId,
+      position: positionOf.get(playerId) ?? "QB",
+      doubled: slot === doubledSlot,
+    }));
+  if (lineup.some((p) => !positionOf.has(p.playerId))) return { ok: false, error: "Unknown player in lineup" };
+  if (doubledSlot && !picks[doubledSlot]) return { ok: false, error: "The x2 slot is empty" };
+  const errors = validateLineup(lineup);
+  if (errors.length) return { ok: false, error: errors.join("; ") };
+
+  const { data: row, error: lineupError } = await admin
+    .from("lineups")
+    .upsert({ week_id: weekId, owner_id: ownerId }, { onConflict: "week_id,owner_id" })
+    .select("id, lineup_picks(slot, player_id, is_doubled)")
+    .single();
+  if (lineupError) return { ok: false, error: lineupError.message };
+
+  const { error: deleteError } = await admin.from("lineup_picks").delete().eq("lineup_id", row.id);
+  if (deleteError) return { ok: false, error: deleteError.message };
+  if (lineup.length) {
+    const { error: insertError } = await admin.from("lineup_picks").insert(
+      lineup.map((p) => ({ lineup_id: row.id, slot: p.slot, player_id: p.playerId, is_doubled: !!p.doubled })),
+    );
+    if (insertError) return { ok: false, error: insertError.message };
+  }
+
+  await admin.from("audit_log").insert({
+    actor_id: owner.id,
+    action: "fix_lineup",
+    detail: { week: week.number, ownerId, before: row.lineup_picks, after: lineup },
+  });
+  if (week.status === "final") await finalizeWeek(admin, weekId, owner.id);
+
+  revalidatePath("/lineups");
+  revalidatePath("/money");
+  return { ok: true };
 }

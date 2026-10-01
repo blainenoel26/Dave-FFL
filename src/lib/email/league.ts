@@ -9,15 +9,21 @@ interface OwnerRow {
   id: string;
   display_name: string;
   email: string;
+  auth_user_id: string | null;
 }
 
 async function seasonOwners(admin: SupabaseClient, seasonId: number): Promise<OwnerRow[]> {
   const { data, error } = await admin
     .from("season_owners")
-    .select("owners(id, display_name, email)")
+    .select("owners(id, display_name, email, auth_user_id)")
     .eq("season_id", seasonId);
   if (error) throw new Error(`season_owners: ${error.message}`);
   return (data ?? []).map((r) => r.owners as unknown as OwnerRow);
+}
+
+/** League emails only go to owners who have joined the app (signed in at least once). */
+async function joinedOwners(admin: SupabaseClient, seasonId: number): Promise<OwnerRow[]> {
+  return (await seasonOwners(admin, seasonId)).filter((o) => o.auth_user_id !== null);
 }
 
 /** Emails every owner whose lineup is missing picks or the x2, if any game hasn't kicked off. */
@@ -25,7 +31,7 @@ export async function sendPickReminders(admin: SupabaseClient, week: Week, now =
   if (!week.games.some((g) => new Date(g.kickoff) > now)) return 0;
 
   const { data: seasonRow } = await admin.from("weeks").select("season_id").eq("id", week.id).single();
-  const owners = await seasonOwners(admin, seasonRow!.season_id);
+  const owners = await joinedOwners(admin, seasonRow!.season_id);
   const { data: lineups, error } = await admin
     .from("lineups")
     .select("owner_id, lineup_picks(is_doubled)")
@@ -57,8 +63,9 @@ export async function sendWeekResults(admin: SupabaseClient, weekId: number): Pr
     .single();
   if (weekError) throw new Error(`weeks: ${weekError.message}`);
 
-  const [owners, { data: results }, { data: ledger }] = await Promise.all([
+  const [owners, joined, { data: results }, { data: ledger }] = await Promise.all([
     seasonOwners(admin, week.season_id),
+    joinedOwners(admin, week.season_id),
     admin.from("week_results").select("owner_id, points, place, payout_cents").eq("week_id", weekId).order("place"),
     admin.from("ledger_entries").select("owner_id, cents").eq("season_id", week.season_id),
   ]);
@@ -72,8 +79,9 @@ export async function sendWeekResults(admin: SupabaseClient, weekId: number): Pr
   const net = new Map<string, number>();
   for (const e of ledger ?? []) net.set(e.owner_id, (net.get(e.owner_id) ?? 0) + e.cents);
 
+  if (!joined.length) return 0;
   return sendEmails(
-    owners.map((owner) => ({
+    joined.map((owner) => ({
       to: owner.email,
       ...resultsEmail({
         ownerName: owner.display_name,

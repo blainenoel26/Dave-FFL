@@ -95,7 +95,7 @@ export default async function CommishPage(props: PageProps<"/commish">) {
           <h2 className="font-semibold">Email</h2>
           <p className="text-sm text-muted">
             {emailConfigured()
-              ? "League email is connected. Owners get pick reminders (Thu and Sun at noon ET) and a results email when a week is finalized."
+              ? "League email is connected. Owners who have signed in get pick reminders (Thu and Sun at noon ET) and a results email when a week is finalized."
               : "League email isn't connected yet, so no reminders or results emails go out."}
           </p>
           {emailConfigured() && (
@@ -107,6 +107,28 @@ export default async function CommishPage(props: PageProps<"/commish">) {
             </form>
           )}
         </section>
+
+        {week.status !== "closed" && (
+          <section className="card">
+            <h2 className="font-semibold">Fix a lineup</h2>
+            <p className="mb-2 text-sm text-muted">
+              Change any owner&apos;s picks, even after kickoff, e.g. a pick sent by email or a slot mix-up.
+            </p>
+            <ul className="text-sm">
+              {lineups.map((l) => (
+                <li key={l.ownerId} className="border-t border-border first:border-0">
+                  <Link
+                    href={`/commish/lineup?week=${week.number}&owner=${l.ownerId}`}
+                    className="flex justify-between py-2"
+                  >
+                    <span>{l.ownerName}</span>
+                    <span className="text-muted">{l.picks.length}/8 ›</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {week.status === "final" && (
           <section className="card flex flex-col gap-3">

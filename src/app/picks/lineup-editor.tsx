@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { SLOTS, isEligible, type Slot } from "@/lib/league/lineup";
 import { isLocked, type PlayerOption } from "@/lib/league/week";
 import { Matchup } from "@/components/matchup";
-import { saveLineup } from "./actions";
+import { saveLineup, type SaveResult } from "./actions";
 
 const SLOT_LABEL: Record<Slot, string> = {
   QB: "QB", RB1: "RB", RB2: "RB", WR1: "WR/TE", WR2: "WR/TE", WR3: "WR/TE", K: "K", DEF: "DEF",
@@ -19,8 +19,13 @@ export function LineupEditor(props: {
   players: PlayerOption[];
   initialPicks: Picks;
   initialDoubled: Slot | null;
+  /** Save handler; defaults to saving the signed-in owner's own lineup. */
+  save?: (weekId: number, picks: Picks, doubled: Slot | null) => Promise<SaveResult>;
+  /** Commissioner fixes: kicked-off players can still be changed. */
+  ignoreLocks?: boolean;
 }) {
-  const { weekId, players } = props;
+  const { weekId, players, ignoreLocks = false } = props;
+  const save = props.save ?? saveLineup;
   const byId = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
 
   const [saved, setSaved] = useState({ picks: props.initialPicks, doubled: props.initialDoubled });
@@ -36,7 +41,8 @@ export function LineupEditor(props: {
     return () => clearInterval(timer);
   }, []);
 
-  const locked = (playerId: string | undefined) => !!playerId && isLocked(byId.get(playerId)?.kickoff ?? null, now);
+  const locked = (playerId: string | undefined) =>
+    !ignoreLocks && !!playerId && isLocked(byId.get(playerId)?.kickoff ?? null, now);
   const doubledLocked = doubled !== null && locked(saved.picks[doubled]) && saved.doubled === doubled;
   const dirty =
     doubled !== saved.doubled || SLOTS.some((s) => (picks[s] ?? null) !== (saved.picks[s] ?? null));
@@ -58,9 +64,9 @@ export function LineupEditor(props: {
     setMessage(null);
   }
 
-  function save() {
+  function submit() {
     startSaving(async () => {
-      const result = await saveLineup(weekId, picks, doubled);
+      const result = await save(weekId, picks, doubled);
       if (result.ok) {
         setSaved({ picks, doubled });
         setMessage(null);
@@ -134,7 +140,7 @@ export function LineupEditor(props: {
             )}
           </div>
           {dirty || saving ? (
-            <button type="button" onClick={save} disabled={saving} className="btn-primary w-auto px-6">
+            <button type="button" onClick={submit} disabled={saving} className="btn-primary w-auto px-6">
               {saving ? "Saving…" : "Save lineup"}
             </button>
           ) : (
@@ -152,6 +158,7 @@ export function LineupEditor(props: {
           taken={new Set(SLOTS.filter((s) => s !== openSlot).map((s) => picks[s]).filter(Boolean) as string[])}
           current={picks[openSlot]}
           now={now}
+          ignoreLocks={ignoreLocks}
           onChoose={(id) => choose(openSlot, id)}
           onClose={() => setOpenSlot(null)}
         />
@@ -166,10 +173,12 @@ function PlayerSheet(props: {
   taken: Set<string>;
   current: string | undefined;
   now: Date;
+  ignoreLocks: boolean;
   onChoose: (playerId: string | null) => void;
   onClose: () => void;
 }) {
-  const { slot, players, taken, current, now, onChoose, onClose } = props;
+  const { slot, players, taken, current, now, ignoreLocks, onChoose, onClose } = props;
+  const kickedOff = (p: PlayerOption) => !ignoreLocks && isLocked(p.kickoff, now);
   const [query, setQuery] = useState("");
 
   const eligible = useMemo(() => players.filter((p) => isEligible(slot, p.position)), [players, slot]);
@@ -203,12 +212,12 @@ function PlayerSheet(props: {
           </li>
         )}
         {matches.slice(0, MAX_RESULTS).map((p) => {
-          const unavailable = taken.has(p.id) || isLocked(p.kickoff, now) || !p.gameId;
+          const unavailable = taken.has(p.id) || kickedOff(p) || !p.gameId;
           const reason = taken.has(p.id)
             ? "already in your lineup"
             : !p.gameId
               ? "bye week"
-              : isLocked(p.kickoff, now)
+              : kickedOff(p)
                 ? "kicked off"
                 : null;
           return (
