@@ -5,8 +5,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Runs daily (vercel.json → crons). Finalizes weeks whose games are all final and closes weeks
 // whose commissioner window has passed. Vercel sends "Authorization: Bearer $CRON_SECRET".
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  const secret = process.env.CRON_SECRET?.trim();
+  if (!secret) {
+    return NextResponse.json({ error: "CRON_SECRET is not configured on this deployment" }, { status: 500 });
+  }
+  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
