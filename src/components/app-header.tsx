@@ -3,8 +3,9 @@ import { signOut } from "@/app/login/actions";
 import { getCurrentOwner } from "@/lib/supabase/server";
 
 const LINKS = [
-  { href: "/picks", label: "My picks" },
+  { href: "/picks", label: "Picks" },
   { href: "/lineups", label: "Lineups" },
+  { href: "/money", label: "Money" },
 ];
 
 export async function AppHeader() {
@@ -13,7 +14,7 @@ export async function AppHeader() {
 
   return (
     <header className="border-b border-border bg-surface">
-      <nav className="mx-auto flex max-w-2xl items-center gap-4 px-4 py-3 text-sm">
+      <nav className="mx-auto flex max-w-2xl items-center gap-4 overflow-x-auto whitespace-nowrap px-4 py-3 text-sm">
         <Link href="/" className="font-semibold">
           Dave FFL
         </Link>
