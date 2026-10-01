@@ -127,9 +127,14 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
 - When a player's team is knocked out, that player is eliminated (shown in red) and scores nothing
   further; points already earned stay.
 - Maximum 8 active players at any time; only active players score. Reserves score nothing.
-- Reserves can be named or changed at any time.
-- After a round is completed (Wild Card, Divisional, Conference Championships), an owner can swap a
-  reserve in for any active player, eliminated or not. Swaps lock at the next round's first kickoff.
+- Everyone plays: every owner in the season is entered ($40 each).
+- Each active locks at his own first playoff kickoff; before that (e.g. a bye team in the Wild Card
+  round) his slot can be changed freely.
+- A locked active can only be replaced by swapping in a reserve, after a round is completed
+  (Wild Card, Divisional, Conference Championships) and before the next round starts. The replaced
+  player moves into that reserve spot, which is then used up: at most 2 substitutions per owner.
+- An unused reserve can be renamed at any time.
+- Display: eliminated players are red (active or reserve); live reserves are green.
 - The active lineup always keeps the regular-season structure: 1 QB, 2 RB, 3 WR/TE, 1 K, 1 DEF.
   A reserve can only replace a player in a slot it is eligible for. Eliminated players stay in their
   slot (scoring nothing) until swapped out, so a late-round lineup may effectively have no live QB
