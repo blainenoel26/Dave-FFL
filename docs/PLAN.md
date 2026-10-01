@@ -59,12 +59,13 @@ Totals and payouts are always derived from lineups + stats, never entered by han
   09:00 UTC, needs `CRON_SECRET` in Vercel), commissioner page (`/commish`: finalize now,
   point corrections, parser warnings), week browsing (`/lineups?week=N`). Weeks 1–3 marked closed
   (run on the sheet; history import pending). First real finalization: week 4, Mon 2026-10-05.
+- Done: season money page (`/money`): fees, winnings, net per owner and the settle-up list
+  (`src/lib/league/settle.ts`).
 - Next:
   1. Commissioner lineup fixes (edit an owner's lineup after a mistake), if the league wants it.
-  2. Season ledger page and end-of-season settle-up.
-  3. League Gmail SMTP → 6-digit codes, pick reminders and weekly result emails.
-  4. Import 2025 + 2026 weeks 1–3 history; parallel run, then cutover.
-  5. Playoffs (by mid-January).
+  2. League Gmail SMTP → 6-digit codes, pick reminders and weekly result emails.
+  3. Import 2025 + 2026 weeks 1–3 history; parallel run, then cutover.
+  4. Playoffs (by mid-January).
 
 ## Phases
 1. **Foundation** — repo scaffold, Supabase schema + migrations, magic-link login, owner roster,
