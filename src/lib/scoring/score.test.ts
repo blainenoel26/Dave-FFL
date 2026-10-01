@@ -43,6 +43,11 @@ describe("scoreOffense", () => {
     expect(offense({ returnTds: [86] })).toBe(12);
   });
 
+  it("scores 2-point conversions: 1 for the pass, 2 for the run or catch", () => {
+    expect(offense({ twoPointPasses: 1 })).toBe(1);
+    expect(offense({ twoPointConversions: 2 })).toBe(4);
+  });
+
   it("scores kickers", () => {
     expect(offense({ fieldGoals: [50, 38], extraPoints: 3 })).toBe(11);
   });

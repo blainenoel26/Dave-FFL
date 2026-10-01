@@ -66,6 +66,9 @@ const FIELD_GOAL = /^(.+?) (\d+) Yd Field Goal/i;
 const RETURN_TD = /^(.+?) (\d+) Yd (?:Kickoff|Kick|Punt) Return/i;
 const DEFENSE_TD = /Interception Return|Fumble Return|Fumble Recovery|Blocked|Missed Field Goal Return/i;
 const SAFETY = /safety/i;
+// A touchdown's successful 2-point try, in the brackets after it.
+const TWO_POINT_PASS = /\(([^()]+?) Pass to ([^()]+?) for Two-Point Conversion\)/i;
+const TWO_POINT_RUN = /\(([^()]+?) (?:Run|Rush) for Two-Point Conversion\)/i;
 // A standalone 2-point play (e.g. a defensive PAT return). Not scored. Only the text before any
 // "(…)" counts: a touchdown's description often mentions its extra-point try in parentheses.
 const TWO_POINT = /Defensive PAT|Two-Point|2pt|two point/i;
@@ -172,6 +175,19 @@ export function parseEspnGame(summary: EspnSummary): GameStats {
     const team = play.team?.abbreviation ?? "";
     const text = play.text.trim();
     const typeText = play.type?.text ?? "";
+
+    const twoPass = text.match(TWO_POINT_PASS);
+    if (twoPass) {
+      const passer = find(team, twoPass[1], text);
+      if (passer) passer.line.twoPointPasses++;
+      const catcher = find(team, twoPass[2], text);
+      if (catcher) catcher.line.twoPointConversions++;
+    }
+    const twoRun = text.match(TWO_POINT_RUN);
+    if (twoRun) {
+      const runner = find(team, twoRun[1], text);
+      if (runner) runner.line.twoPointConversions++;
+    }
     let m: RegExpMatchArray | null;
 
     if (TWO_POINT.test(text.split("(")[0]) || TWO_POINT.test(typeText)) {

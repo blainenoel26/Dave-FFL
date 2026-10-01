@@ -30,7 +30,7 @@ const SHEET: Record<string, Record<string, number>> = {
     "Lamar Jackson": 19, "Joe Burrow": 3, "Josh Allen": 29, "Dak Prescott": 7,
     "Jahmyr Gibbs": 19, "Bijan Robinson": 12, "Derrick Henry": 26, "Saquon Barkley": 3,
     "De'Von Achane": 2, "Jaxon Smith-Njigba": 13, "Puka Nacua": 2, "Ja'Marr Chase": 0,
-    "Amon-Ra St. Brown": 14, "CeeDee Lamb": 7, "Justin Jefferson": 18,
+    "Amon-Ra St. Brown": 14, "CeeDee Lamb": 7,
     "Brandon Aubrey": 2, "Cameron Dicker": 2, "Harrison Butker": 7,
     "DEF-TEN": 0, "DEF-PIT": 14, "DEF-LAC": 1, "DEF-PHI": 1,
   },
@@ -46,7 +46,7 @@ const SHEET: Record<string, Record<string, number>> = {
   "2026-w3": {
     "Josh Allen": 10, "Derrick Henry": 15, "Jahmyr Gibbs": 23, "Christian McCaffrey": 10,
     "Jaxon Smith-Njigba": 17, "Amon-Ra St. Brown": 6, "Ja'Marr Chase": 9, "Chris Olave": 4,
-    "George Kittle": 15, "CeeDee Lamb": 4, "Harrison Butker": 6, "Cam Little": 5,
+    "George Kittle": 15, "Harrison Butker": 6, "Cam Little": 5,
     "Brandon Aubrey": 11, "Evan McPherson": 11, "Eddy Pineiro": 8,
     "DEF-SEA": 2, "DEF-KC": 4,
   },
@@ -57,6 +57,7 @@ const SHEET: Record<string, Record<string, number>> = {
 const DISPUTED: Record<string, Record<string, number>> = {
   "2026-w1": {
     "DEF-JAX": 9, // sheet 11: 5 sacks, 2 takeaways, 10 allowed
+    "Justin Jefferson": 20, // sheet 18: the sheet didn't count his 2-point catch (+2)
   },
   "2026-w2": {
     "Derrick Henry": 8, // sheet 6: 68 rush yds, 19 rec yds, 1-yd rush TD
@@ -66,6 +67,7 @@ const DISPUTED: Record<string, Record<string, number>> = {
     "Kenneth Walker III": 14, // sheet 15: 70 rush, 3 rec, 10-yd rush TD, 5-yd rec TD
     "Ashton Jeanty": 3, // sheet 2: 56 rush, 37 rec
     "DEF-CAR": 4, // sheet 2: 2 sacks, 1 takeaway, 21 allowed
+    "CeeDee Lamb": 6, // sheet 4: the sheet didn't count his 2-point catch (+2)
   },
 };
 

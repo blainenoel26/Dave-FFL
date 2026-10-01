@@ -90,8 +90,17 @@ A kick or punt return TD by the opponent counts toward points allowed; it is not
   the play is flagged for commissioner review.
 - A player who doesn't play scores 0.
 
+### Two-point conversions
+| Event | Pts |
+|---|---|
+| Successful 2-pt pass (the passer) | 1 |
+| Successful 2-pt run or catch (the player) | 2 |
+
+Failed tries score nothing. A defensive 2-point return isn't scored for the team defense
+(not covered by the commissioner's ruling; assumed not scored).
+
 ### Not scored
-Two-point conversions, missed kicks.
+Missed kicks, fumbles lost.
 
 ## Payouts
 | Place | 1 | 2 | 3 | 4 | 5 | 6–12 |

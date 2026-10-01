@@ -14,6 +14,9 @@ export interface OffenseLine {
   returnTds: number[];
   fieldGoals: number[];
   extraPoints: number;
+  /** Successful 2-point conversions thrown, and run or caught. */
+  twoPointPasses: number;
+  twoPointConversions: number;
 }
 
 export interface DefenseLine {
@@ -28,7 +31,7 @@ export function emptyOffenseLine(): OffenseLine {
   return {
     passYards: 0, interceptions: 0, rushYards: 0, recYards: 0, returnYards: 0,
     passTds: [], rushTds: [], recTds: [], returnTds: [],
-    fieldGoals: [], extraPoints: 0,
+    fieldGoals: [], extraPoints: 0, twoPointPasses: 0, twoPointConversions: 0,
   };
 }
 
@@ -69,6 +72,8 @@ export function scoreOffense(line: OffenseLine, rules: ScoringRules): number {
 
   points += sumTiers(rules.fieldGoal, line.fieldGoals);
   points += line.extraPoints * rules.extraPoint;
+  points += line.twoPointPasses * rules.twoPointPass;
+  points += line.twoPointConversions * rules.twoPointConversion;
   return points;
 }
 

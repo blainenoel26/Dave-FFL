@@ -19,6 +19,9 @@ export interface ScoringRules {
   passBonusThreshold: number;
   passBonusPoints: number;
   interceptionThrown: number;
+  /** Successful 2-point conversions: the passer, and the player who runs or catches it. */
+  twoPointPass: number;
+  twoPointConversion: number;
   yardsPerPoint: number;
   fieldGoal: Tier[];
   extraPoint: number;
@@ -45,6 +48,8 @@ export const RULES_2026: ScoringRules = {
   passBonusThreshold: 300,
   passBonusPoints: 4,
   interceptionThrown: -1,
+  twoPointPass: 1,
+  twoPointConversion: 2,
   yardsPerPoint: 25,
   fieldGoal: [
     { minYards: 0, points: 3 },

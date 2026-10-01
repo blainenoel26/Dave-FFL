@@ -30,7 +30,7 @@ const ROUNDS: Record<string, Record<string, number>> = {
 
 // Where ESPN + the written rules differ from the sheet; the sheet value is in the comment.
 const DISPUTED: Record<string, Record<string, number>> = {
-  "2024-p1": { "Josh Allen": 13 }, // sheet 15: TD passes of 24 and 55 yds (25+ would make it 15)
+  "2024-p1": { "Josh Allen": 14 }, // sheet 15: TD passes of 24 and 55 yds + a 2-pt pass (+1)
   "2024-p2": {
     "DEF-PHI": 9, // sheet 11: 5 sacks, 2 takeaways, 22 allowed
     "Jameson Williams": 13, // sheet 14: a WR who threw an INT; the sheet didn't take a point off
