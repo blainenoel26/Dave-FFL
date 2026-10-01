@@ -5,7 +5,8 @@ import { getPlayerOptions, getWeek, getWeekLineups } from "@/lib/league/week";
 import { getWeekScores } from "@/lib/scoring/live";
 import { RULES_2026 } from "@/lib/scoring/rules";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
-import { finalizeAction, overrideAction } from "./actions";
+import { emailConfigured } from "@/lib/email/send";
+import { finalizeAction, overrideAction, testEmailAction } from "./actions";
 
 const STATUS_TEXT: Record<string, string> = {
   open: "Open: games are being played or haven't started.",
@@ -86,6 +87,23 @@ export default async function CommishPage(props: PageProps<"/commish">) {
                 {week.status === "final" ? "Re-run finalization" : "Finalize now"}
               </button>
               {!scores?.allFinal && <p className="mt-2 text-xs text-muted">Available once every game is final.</p>}
+            </form>
+          )}
+        </section>
+
+        <section className="card flex flex-col gap-3">
+          <h2 className="font-semibold">Email</h2>
+          <p className="text-sm text-muted">
+            {emailConfigured()
+              ? "League email is connected. Owners get pick reminders (Thu and Sun at noon ET) and a results email when a week is finalized."
+              : "League email isn't connected yet, so no reminders or results emails go out."}
+          </p>
+          {emailConfigured() && (
+            <form action={testEmailAction}>
+              <input type="hidden" name="weekNumber" value={week.number} />
+              <button className="flex h-12 w-full items-center justify-center rounded-lg border border-border font-medium">
+                Send me a test email
+              </button>
             </form>
           )}
         </section>

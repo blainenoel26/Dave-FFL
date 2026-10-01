@@ -11,7 +11,7 @@ import { payoutWeek } from "./payouts";
 export const CLOSE_AFTER_MS = 54 * 60 * 60 * 1000;
 
 export type FinalizeOutcome =
-  | { status: "finalized"; warnings: string[] }
+  | { status: "finalized"; warnings: string[]; firstTime: boolean }
   | { status: "skipped"; reason: string };
 
 interface WeekRow {
@@ -154,5 +154,5 @@ export async function finalizeWeek(
     detail: { week: week.number, warnings: scores.warnings },
   });
 
-  return { status: "finalized", warnings: scores.warnings };
+  return { status: "finalized", warnings: scores.warnings, firstTime: week.status !== "final" };
 }

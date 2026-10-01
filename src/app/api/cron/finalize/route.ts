@@ -1,17 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { rejectUnlessCron } from "@/lib/cron";
+import { sendWeekResults } from "@/lib/email/league";
+import { emailConfigured } from "@/lib/email/send";
 import { CLOSE_AFTER_MS, finalizeWeek } from "@/lib/league/finalize";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-// Runs daily (vercel.json → crons). Finalizes weeks whose games are all final and closes weeks
-// whose commissioner window has passed. Vercel sends "Authorization: Bearer $CRON_SECRET".
+// Runs daily (vercel.json → crons). Finalizes weeks whose games are all final, emails the results
+// the first time, and closes weeks whose commissioner window has passed.
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) {
-    return NextResponse.json({ error: "CRON_SECRET is not configured on this deployment" }, { status: 500 });
-  }
-  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const rejected = rejectUnlessCron(request);
+  if (rejected) return rejected;
 
   const admin = createAdminClient();
   const { data: weeks, error } = await admin
@@ -39,7 +37,18 @@ export async function GET(request: NextRequest) {
     }
 
     const outcome = await finalizeWeek(admin, week.id, null);
-    report[`week ${week.number}`] = outcome.status === "finalized" ? "finalized" : `skipped: ${outcome.reason}`;
+    if (outcome.status !== "finalized") {
+      report[`week ${week.number}`] = `skipped: ${outcome.reason}`;
+      continue;
+    }
+    report[`week ${week.number}`] = "finalized";
+    if (outcome.firstTime && emailConfigured()) {
+      try {
+        report[`week ${week.number}`] += `, results emailed to ${await sendWeekResults(admin, week.id)}`;
+      } catch (e) {
+        report[`week ${week.number}`] += `, results email failed: ${(e as Error).message}`;
+      }
+    }
   }
 
   return NextResponse.json({ ok: true, report });

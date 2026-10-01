@@ -40,7 +40,7 @@ function LoginForm() {
         <p className="mt-1 text-sm text-muted">
           {state.step === "email"
             ? "Sign in with the email you use for the league."
-            : `Check ${state.email}. Tap the sign-in link in the email on this device, or enter the code if the email has one.`}
+            : `We emailed ${state.email}. Enter the 6-digit code from the email, or tap the sign-in link in it.`}
         </p>
       </div>
 
