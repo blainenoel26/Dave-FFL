@@ -16,6 +16,8 @@ export interface Week {
   number: number;
   label: string;
   status: string;
+  seasonYear: number;
+  payoutTableCents: number[];
   games: Game[];
 }
 
@@ -55,24 +57,39 @@ function toGame(g: GameRow): Game {
   return { id: g.id, homeTeam: g.home_team, awayTeam: g.away_team, kickoff: g.kickoff, status: g.status };
 }
 
-/** The first regular-season week that still has an unfinished game (or the last week). */
-export async function getCurrentWeek(db: SupabaseClient): Promise<Week | null> {
+/** A week stays current until this long after its last kickoff (Monday night → Tuesday morning). */
+const WEEK_ROLLOVER_MS = 12 * 60 * 60 * 1000;
+
+/** The current regular-season week: the first whose last game kicked off < 12 hours ago or later. */
+export async function getCurrentWeek(db: SupabaseClient, now: Date = new Date()): Promise<Week | null> {
   const { data, error } = await db
     .from("weeks")
-    .select("id, number, label, status, nfl_games(id, home_team, away_team, kickoff, status)")
+    .select(
+      "id, number, label, status, seasons(year, payout_table_cents), nfl_games(id, home_team, away_team, kickoff, status)",
+    )
     .eq("kind", "regular")
     .order("number");
   if (error) throw new Error(`weeks: ${error.message}`);
   if (!data?.length) return null;
 
-  const weeks: Week[] = data.map((w) => ({
-    id: w.id,
-    number: w.number,
-    label: w.label,
-    status: w.status,
-    games: (w.nfl_games as GameRow[]).map(toGame).sort((a, b) => a.kickoff.localeCompare(b.kickoff)),
-  }));
-  return weeks.find((w) => w.games.some((g) => g.status !== "final")) ?? weeks[weeks.length - 1];
+  const weeks: Week[] = data.map((w) => {
+    const season = w.seasons as unknown as { year: number; payout_table_cents: number[] };
+    return {
+      id: w.id,
+      number: w.number,
+      label: w.label,
+      status: w.status,
+      seasonYear: season.year,
+      payoutTableCents: season.payout_table_cents,
+      games: (w.nfl_games as GameRow[]).map(toGame).sort((a, b) => a.kickoff.localeCompare(b.kickoff)),
+    };
+  });
+  return (
+    weeks.find((w) => {
+      const last = w.games[w.games.length - 1];
+      return last && new Date(last.kickoff).getTime() + WEEK_ROLLOVER_MS > now.getTime();
+    }) ?? weeks[weeks.length - 1]
+  );
 }
 
 /** Active players plus team defenses, with this week's matchup for each. */
