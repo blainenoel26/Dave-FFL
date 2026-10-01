@@ -76,6 +76,9 @@ Totals and payouts are always derived from lineups + stats, never entered by han
   3. Playoffs, January: re-run `npm run import:nfl` after Week 18 and after each round to load
      matchups; commissioner tools for playoff corrections/roster fixes if needed.
 
+- Later (owner said "maybe later"): Scoring settings form on the Commish page so point values can be
+  edited without GitHub (use `seasons.scoring`, falling back to `RULES_2026`).
+
 ## Phases
 1. **Foundation** — repo scaffold, Supabase schema + migrations, magic-link login, owner roster,
    nightly import of NFL players and schedule.
