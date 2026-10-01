@@ -29,8 +29,8 @@ export default async function PlayoffsPage() {
             <p className="text-muted">
               Everyone plays ($40). Pick 8 actives (QB, 2 RB, 3 WR/TE, K, DEF) plus 2 reserves. Points add up from the
               Wild Card round through the Super Bowl; eliminated players stop scoring. Between rounds you can swap a
-              reserve in (two swaps in all) and move your x2. Playoff winnings are added to your season balance; payout
-              details are coming from the commissioner.
+              reserve in (two swaps in all) and move your x2. Playoff winnings ($140, $110, $80, $60, $40, $30 and $20
+              for 1st–7th) are added to your season balance.
             </p>
           </section>
         </main>

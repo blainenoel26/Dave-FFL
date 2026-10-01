@@ -43,7 +43,7 @@ type GameRow = { home_team: string; away_team: string; kickoff: string };
 export async function loadPlayoffs(db: SupabaseClient, now = new Date()): Promise<PlayoffView | null> {
   const { data: season } = await db
     .from("seasons")
-    .select("id, year, playoff_entry_cents, playoff_percents")
+    .select("*") // playoff_payout_cents arrives with migration 0005
     .order("year", { ascending: false })
     .limit(1)
     .single();
@@ -145,8 +145,12 @@ export async function loadPlayoffs(db: SupabaseClient, now = new Date()): Promis
     };
   });
 
-  const potCents = owners.length * season.playoff_entry_cents;
-  const tableCents = percentTable(potCents, (season.playoff_percents as number[]).map(Number));
+  // Fixed payouts per place when set (2026: $140/110/80/60/40/30/20); otherwise percentages of the pot.
+  const fixed = season.playoff_payout_cents as number[] | null | undefined;
+  const tableCents = fixed?.length
+    ? fixed.map(Number)
+    : percentTable(owners.length * season.playoff_entry_cents, (season.playoff_percents as number[]).map(Number));
+  const potCents = tableCents.reduce((a, b) => a + b, 0);
   const placed = new Map(
     payoutWeek(rows.map((r) => ({ ownerId: r.ownerId, points: r.total })), tableCents).map((p) => [p.ownerId, p]),
   );

@@ -83,3 +83,24 @@ describe("percentTable", () => {
     ]);
   });
 });
+
+describe("2026 playoff payouts", () => {
+  const PLAYOFF_2026 = [14000, 11000, 8000, 6000, 4000, 3000, 2000];
+  const twelve = (overrides: Record<string, number> = {}) =>
+    standings({
+      o01: 300, o02: 290, o03: 280, o04: 270, o05: 260, o06: 250, o07: 240, o08: 230,
+      o09: 220, o10: 210, o11: 200, o12: 190, ...overrides,
+    });
+
+  it("pays 1st-7th and adds up to the $480 pot", () => {
+    const result = payoutWeek(twelve(), PLAYOFF_2026);
+    expect(result.filter((p) => p.cents > 0).map((p) => p.cents)).toEqual(PLAYOFF_2026);
+    expect(result.reduce((sum, p) => sum + p.cents, 0)).toBe(48000);
+  });
+
+  it("splits a tie for 7th with 8th: ($20 + $0) / 2", () => {
+    const result = payoutWeek(twelve({ o08: 240 }), PLAYOFF_2026);
+    expect(result.find((p) => p.ownerId === "o07")?.cents).toBe(1000);
+    expect(result.find((p) => p.ownerId === "o08")?.cents).toBe(1000);
+  });
+});

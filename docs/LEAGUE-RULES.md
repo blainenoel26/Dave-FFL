@@ -144,8 +144,9 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
 - One doubled non-QB pick. The doubler can be moved after each completed round; doubling applies to
   points scored in the rounds that player held it.
 - Scoring rules are the same as the regular season.
-- Entry $40 per owner (2025 and 2026). Pot paid to 8 places as a share of the pot:
-  25% / 20% / 16% / 13% / 10% / 8% / 5% / 3%. Ties use the same pooling rule as weekly payouts.
+- Entry $40 per owner; pot $480 in 2026. Seven fixed payouts: $140 / $110 / $80 / $60 / $40 / $30 / $20
+  (1st–7th). Ties use the same pooling rule as weekly payouts. (2025 used 25/20/16/13/10/8/5/3% of the pot.)
+- Playoff winnings and the $40 entry go into each owner's season balance, settled once after the Super Bowl.
 
 ## Weekly timeline
 - Provisional scores after Thursday games and after Sunday games.
@@ -167,7 +168,4 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
   (24-yd TD pass scored as 25+?), Eagles DEF divisional (+2 vs ESPN, same pattern as 2026 wk 1 JAX).
 
 ## Open questions
-- Playoff payout structure: the app uses 25/20/16/13/10/8/5/3% of the playoff pot (from the 2025
-  sheet), added to each owner's season balance. The league says this isn't right; the correct
-  structure is coming from Blaine. Update `seasons.playoff_percents` / `src/lib/playoffs/` to match.
 - Tie splits: which tied owner(s) receive the leftover penny? (Default: alphabetical by owner ID.)
