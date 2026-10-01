@@ -39,6 +39,10 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
     getWeekScores(week.seasonYear, week.number, RULES_2026).catch(() => null),
     stored ? getStoredPoints(db, week.id) : null,
   ]);
+  // Saved results win when they exist (finalized weeks, and weeks run on the league sheet).
+  const savedResults = stored
+    ? ((await db.from("week_results").select("owner_id, points, place, payout_cents").eq("week_id", week.id)).data ?? [])
+    : [];
   const byId = new Map(players.map((p) => [p.id, p]));
   const points = storedPoints ?? scores?.points ?? new Map<string, number>();
   const gameByTeam = new Map<string, LiveGame>();
@@ -54,7 +58,11 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
       Object.fromEntries(points),
     ),
   }));
-  const standings = payoutWeek(totals, week.payoutTableCents);
+  const standings = savedResults.length
+    ? savedResults
+        .map((r) => ({ ownerId: r.owner_id as string, points: Number(r.points), place: r.place, cents: r.payout_cents }))
+        .sort((a, b) => a.place - b.place || a.ownerId.localeCompare(b.ownerId))
+    : payoutWeek(totals, week.payoutTableCents);
   const placeOf = new Map(standings.map((s) => [s.ownerId, s]));
   const started = stored || (scores?.started ?? false);
   const ordered = started
@@ -81,8 +89,12 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
             )}
           </div>
           <p className="text-sm text-muted">
-            {stored ? "Final results" : statusLine(scores)} · {submitted} of {lineups.length} owners have picks in.
+            {stored ? "Final results" : statusLine(scores)}
+            {submitted > 0 || !stored ? ` · ${submitted} of ${lineups.length} owners have picks in.` : ""}
           </p>
+          {stored && submitted === 0 && (
+            <p className="text-sm text-muted">This week was run on the league spreadsheet; only totals and payouts are in the app.</p>
+          )}
         </div>
 
         {started && (
@@ -112,7 +124,7 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
         )}
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {ordered.map((lineup) => {
+          {ordered.filter((l) => !stored || l.picks.length > 0).map((lineup) => {
             const bySlot = new Map(lineup.picks.map((p) => [p.slot, p]));
             const standing = placeOf.get(lineup.ownerId)!;
             return (
