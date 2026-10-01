@@ -23,7 +23,7 @@ export interface EspnSummary {
       }[];
     }[];
   };
-  scoringPlays?: { type: { text: string }; text: string; team: { abbreviation: string } }[];
+  scoringPlays?: { type?: { text?: string }; text: string; team?: { abbreviation?: string } }[];
 }
 
 export interface PlayerGame {
@@ -66,6 +66,9 @@ const FIELD_GOAL = /^(.+?) (\d+) Yd Field Goal/i;
 const RETURN_TD = /^(.+?) (\d+) Yd (?:Kickoff|Kick|Punt) Return/i;
 const DEFENSE_TD = /Interception Return|Fumble Return|Fumble Recovery|Blocked|Missed Field Goal Return/i;
 const SAFETY = /safety/i;
+// A standalone 2-point play (e.g. a defensive PAT return). Not scored. Only the text before any
+// "(…)" counts: a touchdown's description often mentions its extra-point try in parentheses.
+const TWO_POINT = /Defensive PAT|Two-Point|2pt|two point/i;
 
 function stat(keys: string[], stats: string[], key: string): string | undefined {
   const i = keys.indexOf(key);
@@ -166,11 +169,14 @@ export function parseEspnGame(summary: EspnSummary): GameStats {
   const safeties = new Map<string, number>();
 
   for (const play of summary.scoringPlays ?? []) {
-    const team = play.team.abbreviation;
+    const team = play.team?.abbreviation ?? "";
     const text = play.text.trim();
+    const typeText = play.type?.text ?? "";
     let m: RegExpMatchArray | null;
 
-    if ((m = text.match(LATERAL))) {
+    if (TWO_POINT.test(text.split("(")[0]) || TWO_POINT.test(typeText)) {
+      continue;
+    } else if ((m = text.match(LATERAL))) {
       const legs = [...m[4].matchAll(LATERAL_LEG)];
       const total = num(m[3]) + legs.reduce((sum, leg) => sum + num(leg[2]), 0);
       const scorer = legs[legs.length - 1][1];
@@ -186,12 +192,12 @@ export function parseEspnGame(summary: EspnSummary): GameStats {
       find(team, m[1], text)?.line.fieldGoals.push(num(m[2]));
     } else if ((m = text.match(RETURN_TD))) {
       find(team, m[1], text)?.line.returnTds.push(num(m[2]));
-    } else if (DEFENSE_TD.test(text) || DEFENSE_TD.test(play.type.text)) {
+    } else if (DEFENSE_TD.test(text) || DEFENSE_TD.test(typeText)) {
       add(defTds, team, 1);
-    } else if (SAFETY.test(text) || SAFETY.test(play.type.text)) {
+    } else if (SAFETY.test(text) || SAFETY.test(typeText)) {
       add(safeties, team, 1);
     } else {
-      warnings.push(`Unrecognized scoring play (${play.type.text}): ${text}`);
+      warnings.push(`Unrecognized scoring play (${typeText || "no type"}): ${text}`);
     }
   }
 

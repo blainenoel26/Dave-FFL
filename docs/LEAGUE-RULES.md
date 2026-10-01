@@ -155,7 +155,11 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
 - Six 2026 weeks 1–3 scores where ESPN + the written rules differ from the sheet by 1–2 points
   (listed in `src/lib/scoring/espn.test.ts` → DISPUTED). Paid weeks stay as paid.
 - Lateral touchdowns scored at the full play length.
-- Return yards as their own category; the −1 per interception rule applying to any passer.
+- Return yards as their own category.
+- The −1 per interception: the app applies it to any passer, but the 2025 playoff sheet didn't dock
+  a WR who threw one (Jameson Williams). QBs only?
+- 2024–25 playoff disputes (`src/lib/scoring/playoffs-2024.test.ts` → DISPUTED): Josh Allen WC
+  (24-yd TD pass scored as 25+?), Eagles DEF divisional (+2 vs ESPN, same pattern as 2026 wk 1 JAX).
 
 ## Open questions
 - Tie splits: which tied owner(s) receive the leftover penny? (Default: alphabetical by owner ID.)

@@ -13,7 +13,7 @@ const get = async (url) => {
   return res.json();
 };
 
-const outDir = join("src", "lib", "scoring", "__fixtures__", `${season}-w${week}`);
+const outDir = join("src", "lib", "scoring", "__fixtures__", `${season}-${seasonType === "3" ? "p" : "w"}${week}`);
 mkdirSync(outDir, { recursive: true });
 
 const board = await get(`${base}/scoreboard?seasontype=${seasonType}&week=${week}&dates=${season}`);
@@ -46,9 +46,9 @@ for (const event of board.events) {
       })),
     },
     scoringPlays: (summary.scoringPlays ?? []).map((p) => ({
-      type: { text: p.type.text },
+      type: { text: p.type?.text ?? "" },
       text: p.text,
-      team: { abbreviation: p.team.abbreviation },
+      team: { abbreviation: p.team?.abbreviation ?? "" },
     })),
   };
   const name = event.competitions[0].competitors
