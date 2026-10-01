@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { SLOTS, isEligible, type Slot } from "@/lib/league/lineup";
 import { isLocked, type PlayerOption } from "@/lib/league/week";
@@ -26,7 +27,7 @@ export function LineupEditor(props: {
   const [picks, setPicks] = useState<Picks>(props.initialPicks);
   const [doubled, setDoubled] = useState<Slot | null>(props.initialDoubled);
   const [openSlot, setOpenSlot] = useState<Slot | null>(null);
-  const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ kind: "error"; text: string } | null>(null);
   const [saving, startSaving] = useTransition();
   const [now, setNow] = useState(() => new Date());
 
@@ -62,7 +63,7 @@ export function LineupEditor(props: {
       const result = await saveLineup(weekId, picks, doubled);
       if (result.ok) {
         setSaved({ picks, doubled });
-        setMessage({ kind: "ok", text: "Lineup saved." });
+        setMessage(null);
       } else {
         setMessage({ kind: "error", text: result.error });
       }
@@ -122,15 +123,25 @@ export function LineupEditor(props: {
 
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-surface/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
-          <p
-            role="status"
-            className={`min-w-0 flex-1 text-sm ${message?.kind === "error" ? "text-danger" : "text-muted"}`}
-          >
-            {message?.text ?? (dirty ? "Unsaved changes" : "All changes saved")}
-          </p>
-          <button type="button" onClick={save} disabled={!dirty || saving} className="btn-primary w-auto px-6">
-            {saving ? "Saving…" : "Save lineup"}
-          </button>
+          <div className="min-w-0 flex-1 text-sm">
+            <p role="status" className={message?.kind === "error" ? "text-danger" : "text-muted"}>
+              {message?.kind === "error" ? message.text : dirty ? "You have unsaved changes" : "Your lineup is saved"}
+            </p>
+            {!dirty && (
+              <Link href="/lineups" className="font-medium text-accent underline">
+                See all lineups
+              </Link>
+            )}
+          </div>
+          {dirty || saving ? (
+            <button type="button" onClick={save} disabled={saving} className="btn-primary w-auto px-6">
+              {saving ? "Saving…" : "Save lineup"}
+            </button>
+          ) : (
+            <span className="flex h-12 items-center rounded-lg border border-accent px-4 font-medium text-accent">
+              Saved ✓
+            </span>
+          )}
         </div>
       </div>
 
