@@ -125,7 +125,7 @@ export function LineupEditor(props: {
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <div className="min-w-0 flex-1 text-sm">
             <p role="status" className={message?.kind === "error" ? "text-danger" : "text-muted"}>
-              {message?.kind === "error" ? message.text : dirty ? "You have unsaved changes" : "Your lineup is saved"}
+              {message?.kind === "error" ? message.text : dirty ? "You have unsaved changes" : `Lineup accepted · ${SLOTS.filter((s) => picks[s]).length} of 8 picks`}
             </p>
             {!dirty && (
               <Link href="/lineups" className="font-medium text-accent underline">
@@ -139,7 +139,7 @@ export function LineupEditor(props: {
             </button>
           ) : (
             <span className="flex h-12 items-center rounded-lg border border-accent px-4 font-medium text-accent">
-              Saved ✓
+              Accepted ✓
             </span>
           )}
         </div>
