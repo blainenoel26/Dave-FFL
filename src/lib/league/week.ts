@@ -60,8 +60,8 @@ function toGame(g: GameRow): Game {
 /** A week stays current until this long after its last kickoff (Monday night → Tuesday morning). */
 const WEEK_ROLLOVER_MS = 12 * 60 * 60 * 1000;
 
-/** The current regular-season week: the first whose last game kicked off < 12 hours ago or later. */
-export async function getCurrentWeek(db: SupabaseClient, now: Date = new Date()): Promise<Week | null> {
+/** All regular-season weeks with their games, in order. */
+export async function getWeeks(db: SupabaseClient): Promise<Week[]> {
   const { data, error } = await db
     .from("weeks")
     .select(
@@ -70,9 +70,8 @@ export async function getCurrentWeek(db: SupabaseClient, now: Date = new Date())
     .eq("kind", "regular")
     .order("number");
   if (error) throw new Error(`weeks: ${error.message}`);
-  if (!data?.length) return null;
 
-  const weeks: Week[] = data.map((w) => {
+  return (data ?? []).map((w) => {
     const season = w.seasons as unknown as { year: number; payout_table_cents: number[] };
     return {
       id: w.id,
@@ -84,12 +83,24 @@ export async function getCurrentWeek(db: SupabaseClient, now: Date = new Date())
       games: (w.nfl_games as GameRow[]).map(toGame).sort((a, b) => a.kickoff.localeCompare(b.kickoff)),
     };
   });
+}
+
+/** The current regular-season week: the first whose last game kicked off < 12 hours ago or later. */
+export async function getCurrentWeek(db: SupabaseClient, now: Date = new Date()): Promise<Week | null> {
+  const weeks = await getWeeks(db);
+  if (!weeks.length) return null;
   return (
     weeks.find((w) => {
       const last = w.games[w.games.length - 1];
       return last && new Date(last.kickoff).getTime() + WEEK_ROLLOVER_MS > now.getTime();
     }) ?? weeks[weeks.length - 1]
   );
+}
+
+/** A specific week by number, or the current week when no number is given. */
+export async function getWeek(db: SupabaseClient, number: number | null): Promise<Week | null> {
+  if (number === null) return getCurrentWeek(db);
+  return (await getWeeks(db)).find((w) => w.number === number) ?? null;
 }
 
 /** Active players plus team defenses, with this week's matchup for each. */

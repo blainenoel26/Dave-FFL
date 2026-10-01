@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { Matchup } from "@/components/matchup";
 import { SLOTS, lineupTotal, type Slot } from "@/lib/league/lineup";
 import { payoutWeek } from "@/lib/league/payouts";
-import { getCurrentWeek, getPlayerOptions, getWeekLineups, type PlayerOption } from "@/lib/league/week";
+import { getStoredPoints } from "@/lib/league/finalize";
+import { getPlayerOptions, getWeek, getWeekLineups, type PlayerOption } from "@/lib/league/week";
 import { getWeekScores, type LiveGame, type WeekScores } from "@/lib/scoring/live";
 import { RULES_2026 } from "@/lib/scoring/rules";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
@@ -13,10 +15,11 @@ const SLOT_LABEL: Record<Slot, string> = {
 
 const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-export default async function LineupsPage() {
+export default async function LineupsPage(props: PageProps<"/lineups">) {
+  const { week: weekParam } = await props.searchParams;
   const owner = await getCurrentOwner();
   const db = await createClient();
-  const week = await getCurrentWeek(db);
+  const week = await getWeek(db, typeof weekParam === "string" ? Number(weekParam) : null);
   if (!week) {
     return (
       <>
@@ -28,13 +31,16 @@ export default async function LineupsPage() {
     );
   }
 
-  const [players, lineups, scores] = await Promise.all([
+  // Finalized weeks use the stored points (including commissioner corrections); others are live.
+  const stored = week.status === "final" || week.status === "closed";
+  const [players, lineups, scores, storedPoints] = await Promise.all([
     getPlayerOptions(db, week),
     getWeekLineups(db, week),
     getWeekScores(week.seasonYear, week.number, RULES_2026).catch(() => null),
+    stored ? getStoredPoints(db, week.id) : null,
   ]);
   const byId = new Map(players.map((p) => [p.id, p]));
-  const points = scores?.points ?? new Map<string, number>();
+  const points = storedPoints ?? scores?.points ?? new Map<string, number>();
   const gameByTeam = new Map<string, LiveGame>();
   for (const g of scores?.games ?? []) {
     gameByTeam.set(g.homeTeam, g);
@@ -50,7 +56,7 @@ export default async function LineupsPage() {
   }));
   const standings = payoutWeek(totals, week.payoutTableCents);
   const placeOf = new Map(standings.map((s) => [s.ownerId, s]));
-  const started = scores?.started ?? false;
+  const started = stored || (scores?.started ?? false);
   const ordered = started
     ? [...lineups].sort((a, b) => placeOf.get(a.ownerId)!.place - placeOf.get(b.ownerId)!.place)
     : lineups;
@@ -61,9 +67,21 @@ export default async function LineupsPage() {
       <AppHeader />
       <main className="page">
         <div>
-          <h1 className="text-xl font-semibold">{week.label} lineups</h1>
+          <div className="flex items-center gap-3">
+            {week.number > 1 && (
+              <Link href={`/lineups?week=${week.number - 1}`} aria-label="Previous week" className="px-2 text-muted">
+                ◀
+              </Link>
+            )}
+            <h1 className="flex-1 text-xl font-semibold">{week.label} lineups</h1>
+            {week.number < 18 && (
+              <Link href={`/lineups?week=${week.number + 1}`} aria-label="Next week" className="px-2 text-muted">
+                ▶
+              </Link>
+            )}
+          </div>
           <p className="text-sm text-muted">
-            {statusLine(scores)} · {submitted} of {lineups.length} owners have picks in.
+            {stored ? "Final results" : statusLine(scores)} · {submitted} of {lineups.length} owners have picks in.
           </p>
         </div>
 
@@ -72,7 +90,7 @@ export default async function LineupsPage() {
             <h2 className="mb-2 font-semibold">
               Standings{" "}
               <span className="text-xs font-normal text-muted">
-                {scores?.allFinal ? "final until the commissioner confirms" : "provisional"}
+                {stored ? "final" : scores?.allFinal ? "all games final · awaiting finalization" : "provisional"}
               </span>
             </h2>
             <ol className="text-sm">
@@ -131,7 +149,7 @@ export default async function LineupsPage() {
                                 {player.team} · <GameStatus player={player} game={game} />
                               </span>
                             </span>
-                            {game && game.state !== "pre" && (
+                            {(stored || (game && game.state !== "pre")) && (
                               <span className="shrink-0 tabular-nums">
                                 {(base ?? 0) * (pick?.doubled ? 2 : 1)}
                               </span>

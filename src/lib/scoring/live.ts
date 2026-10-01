@@ -1,6 +1,6 @@
 // Live week scoring straight from ESPN, computed on request and cached briefly by Next.js.
 // Persisted snapshots (finalization, commissioner overrides) build on this later.
-import { parseEspnGame, scoreGame, type EspnSummary } from "./espn";
+import { defenseId, parseEspnGame, scoreGame, type EspnSummary } from "./espn";
 import type { ScoringRules } from "./rules";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
@@ -22,6 +22,8 @@ export interface WeekScores {
   games: LiveGame[];
   /** Fantasy points by player ID (and DEF-<team>) for every game that has started. */
   points: Map<string, number>;
+  /** The stat line behind each player's (or DEF-<team>'s) points, stored when a week is finalized. */
+  lines: Map<string, object>;
   /** Plays the parser couldn't place, for commissioner review. */
   warnings: string[];
   started: boolean;
@@ -65,6 +67,7 @@ export async function getWeekScores(season: number, week: number, rules: Scoring
   });
 
   const points = new Map<string, number>();
+  const lines = new Map<string, object>();
   const warnings: string[] = [];
   const summaries = await Promise.all(
     games
@@ -76,12 +79,15 @@ export async function getWeekScores(season: number, week: number, rules: Scoring
   for (const summary of summaries) {
     const game = parseEspnGame(summary);
     for (const [id, p] of scoreGame(game, rules)) points.set(id, p);
+    for (const p of game.players.values()) lines.set(p.playerId, { name: p.name, team: p.team, ...p.line });
+    for (const [team, line] of game.defenses) lines.set(defenseId(team), { team, ...line });
     warnings.push(...game.warnings);
   }
 
   return {
     games,
     points,
+    lines,
     warnings,
     started: games.some((g) => g.state !== "pre"),
     allFinal: games.length > 0 && games.every((g) => g.state === "post"),
