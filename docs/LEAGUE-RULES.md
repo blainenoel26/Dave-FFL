@@ -167,4 +167,7 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
   (24-yd TD pass scored as 25+?), Eagles DEF divisional (+2 vs ESPN, same pattern as 2026 wk 1 JAX).
 
 ## Open questions
+- Playoff payout structure: the app uses 25/20/16/13/10/8/5/3% of the playoff pot (from the 2025
+  sheet), added to each owner's season balance. The league says this isn't right; the correct
+  structure is coming from Blaine. Update `seasons.playoff_percents` / `src/lib/playoffs/` to match.
 - Tie splits: which tied owner(s) receive the leftover penny? (Default: alphabetical by owner ID.)
