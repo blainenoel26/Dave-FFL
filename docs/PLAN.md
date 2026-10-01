@@ -61,10 +61,12 @@ Totals and payouts are always derived from lineups + stats, never entered by han
   (run on the sheet; history import pending). First real finalization: week 4, Mon 2026-10-05.
 - Done: season money page (`/money`): fees, winnings, net per owner and the settle-up list
   (`src/lib/league/settle.ts`).
+- Done: 2026 weeks 1–3 imported from the league sheet (`scripts/import-history-2026.mjs`): totals,
+  places, payouts and fees; per-owner nets match the sheet. Pick-level lineups not imported.
 - Next:
   1. Commissioner lineup fixes (edit an owner's lineup after a mistake), if the league wants it.
   2. League Gmail SMTP → 6-digit codes, pick reminders and weekly result emails.
-  3. Import 2025 + 2026 weeks 1–3 history; parallel run, then cutover.
+  3. Parallel run alongside the sheet (weeks 4–5), then cutover.
   4. Playoffs (by mid-January).
 
 ## Phases
