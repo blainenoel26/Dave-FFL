@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useActionState } from "react";
+import { Suspense, useActionState, useEffect } from "react";
 import { sendCode, verifyCode, type LoginState } from "./actions";
 
 async function loginAction(prev: LoginState, form: FormData): Promise<LoginState> {
@@ -18,11 +18,18 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
+  // If Supabase fell back to the Site URL, the link's tokens arrive here; finish signing in.
+  useEffect(() => {
+    if (/access_token|error_code/.test(window.location.hash)) {
+      window.location.replace(`/auth/confirm${window.location.hash}`);
+    }
+  }, []);
+
   const linkFailed = useSearchParams().get("error") === "link";
   const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, {
     step: "email",
     error: linkFailed
-      ? "That sign-in link didn't work. Open it on the same device and browser you requested it from, or request a new one."
+      ? "That sign-in link didn't work. It may have expired or already been used. Request a new one below."
       : undefined,
   });
 

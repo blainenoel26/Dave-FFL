@@ -2,7 +2,8 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient, supabaseKey, supabaseUrl } from "@/lib/supabase/server";
 
 export type LoginState =
   | { step: "email"; error?: string }
@@ -19,10 +20,15 @@ export async function sendCode(_prev: LoginState, form: FormData): Promise<Login
   if (checkError) return { step: "email", error: "Couldn't reach the league server. Try again." };
   if (!isMember) return { step: "email", error: "That email isn't on the league roster." };
 
+  // Implicit flow: the emailed link carries the session itself, so it works in any browser,
+  // not just the one that asked for it (phones often open links in the mail app's browser).
+  const linkClient = createSupabaseClient(supabaseUrl(), supabaseKey(), {
+    auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
   const origin = (await headers()).get("origin") ?? "";
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await linkClient.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true, emailRedirectTo: `${origin}/auth/callback` },
+    options: { shouldCreateUser: true, emailRedirectTo: `${origin}/auth/confirm` },
   });
   if (error) return { step: "email", error: error.message };
 
