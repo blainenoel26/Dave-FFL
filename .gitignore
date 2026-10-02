@@ -17,3 +17,7 @@ coverage/
 next-env.d.ts
 .DS_Store
 *.pem
+
+# Personal notes kept in the project folder (may hold passwords)
+FFL info.txt
+*.local.txt
