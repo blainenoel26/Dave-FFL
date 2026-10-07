@@ -1,7 +1,7 @@
 import { AppHeader } from "@/components/app-header";
 import { SLOTS, type Slot } from "@/lib/league/lineup";
 import { loadPlayoffs } from "@/lib/playoffs/data";
-import { RESERVE_SLOTS } from "@/lib/playoffs/rules";
+import { HIDDEN_PLAYER, RESERVE_SLOTS } from "@/lib/playoffs/rules";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
 import { RosterEditor, type Matchup } from "./roster-editor";
 
@@ -13,7 +13,7 @@ const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
 export default async function PlayoffsPage() {
   const owner = await getCurrentOwner();
-  const view = await loadPlayoffs(await createClient());
+  const view = await loadPlayoffs(await createClient(), owner?.id ?? null);
 
   if (!view || view.players.length === 0) {
     return (
@@ -46,7 +46,8 @@ export default async function PlayoffsPage() {
     matchups[g.awayTeam] = { opponent: g.homeTeam, home: false, kickoff: g.kickoff };
   }
   const mine = view.standings.find((s) => s.ownerId === owner?.id);
-  const name = (id: string | null | undefined) => (id ? (byId.get(id)?.name ?? id) : "—");
+  const name = (id: string | null | undefined) =>
+    id === HIDDEN_PLAYER ? "🔒 Hidden until kickoff" : id ? (byId.get(id)?.name ?? id) : "—";
   const out = (id: string | null | undefined) => !!id && eliminated.has(byId.get(id)?.team ?? "");
 
   return (

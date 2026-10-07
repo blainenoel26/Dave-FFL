@@ -42,7 +42,10 @@ export interface SavedPick {
 export interface OwnerLineup {
   ownerId: string;
   ownerName: string;
+  /** The picks the viewer may see: their own, and others' once that player has kicked off. */
   picks: SavedPick[];
+  /** Every slot the owner has filled, including picks still hidden from the viewer. */
+  filledSlots: Slot[];
 }
 
 type GameRow = {
@@ -143,11 +146,23 @@ export async function getPlayerOptions(db: SupabaseClient, week: Week): Promise<
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** Every owner's lineup for the week (owners without one get an empty lineup). */
-export async function getWeekLineups(db: SupabaseClient, week: Week): Promise<OwnerLineup[]> {
-  const [{ data: owners, error: ownersError }, { data: lineups, error: lineupsError }] = await Promise.all([
+/**
+ * Every owner's lineup for the week (owners without one get an empty lineup).
+ *
+ * Pass the viewer's owner ID (or null when signed out) to hide other owners' picks until that
+ * player's game kicks off; filledSlots still says which slots are filled. Omit it for server jobs
+ * and the commissioner's fix-a-lineup screen. (Migration 0006 adds the same rule in the database.)
+ */
+export async function getWeekLineups(
+  db: SupabaseClient,
+  week: Week,
+  viewerId?: string | null,
+  now: Date = new Date(),
+): Promise<OwnerLineup[]> {
+  const [{ data: owners, error: ownersError }, { data: lineups, error: lineupsError }, filled] = await Promise.all([
     db.from("owners").select("id, display_name, owner_code").order("owner_code"),
     db.from("lineups").select("owner_id, lineup_picks(slot, player_id, is_doubled)").eq("week_id", week.id),
+    db.rpc("week_filled_slots", { p_week_id: week.id }),
   ]);
   if (ownersError) throw new Error(`owners: ${ownersError.message}`);
   if (lineupsError) throw new Error(`lineups: ${lineupsError.message}`);
@@ -163,11 +178,46 @@ export async function getWeekLineups(db: SupabaseClient, week: Week): Promise<Ow
     ]),
   );
 
-  return (owners ?? []).map((o) => ({
-    ownerId: o.id,
-    ownerName: o.display_name,
-    picks: picksByOwner.get(o.id) ?? [],
-  }));
+  // Before migration 0006 the function doesn't exist; then every pick comes back from the query.
+  const filledByOwner = new Map<string, Slot[]>();
+  if (!filled.error) {
+    for (const row of (filled.data ?? []) as { owner_id: string; slot: Slot }[]) {
+      filledByOwner.set(row.owner_id, [...(filledByOwner.get(row.owner_id) ?? []), row.slot]);
+    }
+  }
+
+  // Kickoff for each picked player, so other owners' unstarted picks can be hidden.
+  let kickoffOf = (_playerId: string): string | null => null;
+  if (viewerId !== undefined) {
+    const ids = [...new Set([...picksByOwner.values()].flat().map((p) => p.playerId))];
+    const { data: teams } = ids.length
+      ? await db.from("nfl_players").select("id, team_id").in("id", ids)
+      : { data: [] as { id: string; team_id: string }[] };
+    const teamOf = new Map((teams ?? []).map((t) => [t.id, t.team_id as string]));
+    const kickoffByTeam = new Map<string, string>();
+    for (const g of week.games) {
+      kickoffByTeam.set(g.homeTeam, g.kickoff);
+      kickoffByTeam.set(g.awayTeam, g.kickoff);
+    }
+    kickoffOf = (playerId) => kickoffByTeam.get(teamOf.get(playerId) ?? "") ?? null;
+  }
+
+  return (owners ?? []).map((o) => {
+    const all = picksByOwner.get(o.id) ?? [];
+    const hideFromViewer = viewerId !== undefined && o.id !== viewerId;
+    const picks = hideFromViewer
+      ? all.filter((p) => {
+          const kickoff = kickoffOf(p.playerId);
+          return kickoff !== null && new Date(kickoff) <= now;
+        })
+      : all;
+    return {
+      ownerId: o.id,
+      ownerName: o.display_name,
+      picks,
+      filledSlots: filled.error ? all.map((p) => p.slot) : (filledByOwner.get(o.id) ?? []),
+    };
+  });
 }
 
 export function isLocked(kickoff: string | null, now: Date = new Date()): boolean {

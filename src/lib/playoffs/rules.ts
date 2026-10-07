@@ -161,3 +161,28 @@ export function playoffTotal(rounds: readonly { lineup: RoundLineup; points: Rea
   }
   return total;
 }
+
+/** Stands in for a player another owner can't see yet. */
+export const HIDDEN_PLAYER = "hidden";
+
+/**
+ * Another owner's roster as the viewer may see it: players whose team hasn't played yet (actives
+ * and reserves) are replaced by HIDDEN_PLAYER, and the x2 shows only once its player is visible.
+ */
+export function hideUnplayed(roster: PlayoffRoster, hasPlayed: (playerId: string) => boolean): PlayoffRoster {
+  const show = (id: string | null | undefined) => (id ? (hasPlayed(id) ? id : HIDDEN_PLAYER) : id);
+  const actives: Partial<Record<Slot, string>> = {};
+  for (const slot of SLOTS) {
+    const id = show(roster.actives[slot]);
+    if (id) actives[slot] = id;
+  }
+  const doubledId = roster.doubled ? actives[roster.doubled] : undefined;
+  return {
+    actives,
+    doubled: doubledId && doubledId !== HIDDEN_PLAYER ? roster.doubled : null,
+    reserves: {
+      R1: { ...roster.reserves.R1, playerId: show(roster.reserves.R1.playerId) ?? null },
+      R2: { ...roster.reserves.R2, playerId: show(roster.reserves.R2.playerId) ?? null },
+    },
+  };
+}

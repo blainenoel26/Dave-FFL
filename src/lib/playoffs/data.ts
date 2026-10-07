@@ -5,7 +5,8 @@ import { payoutWeek, percentTable } from "../league/payouts";
 import { getWeekScores } from "../scoring/live";
 import { RULES_2026 } from "../scoring/rules";
 import type { PlayoffContextData, PlayoffPlayer } from "./context";
-import { eliminatedTeams, emptyRoster, playoffTotal, type PlayoffRoster } from "./rules";
+import { createAdminClient } from "../supabase/admin";
+import { eliminatedTeams, emptyRoster, hideUnplayed, playoffTotal, type PlayoffRoster } from "./rules";
 import {
   ESPN_PLAYOFF_WEEK,
   currentRound,
@@ -40,7 +41,15 @@ export interface PlayoffView {
 
 type GameRow = { home_team: string; away_team: string; kickoff: string };
 
-export async function loadPlayoffs(db: SupabaseClient, now = new Date()): Promise<PlayoffView | null> {
+/**
+ * Loads the playoff contest. With a viewerId (or null for nobody), other owners' rosters come back
+ * with unplayed players hidden; omit it for server jobs that need everything (e.g. finalizing).
+ */
+export async function loadPlayoffs(
+  db: SupabaseClient,
+  viewerId?: string | null,
+  now = new Date(),
+): Promise<PlayoffView | null> {
   const { data: season } = await db
     .from("seasons")
     .select("*") // playoff_payout_cents arrives with migration 0005
@@ -121,7 +130,7 @@ export async function loadPlayoffs(db: SupabaseClient, now = new Date()): Promis
   // Everyone in the season plays; standings are cumulative.
   const [{ data: members }, { data: versionRows }] = await Promise.all([
     db.from("season_owners").select("owners(id, display_name)").eq("season_id", season.id),
-    db.from("playoff_roster_versions").select("owner_id, roster, saved_at").eq("season_id", season.id),
+    createAdminClient().from("playoff_roster_versions").select("owner_id, roster, saved_at").eq("season_id", season.id),
   ]);
   const owners = (members ?? []).map((m) => m.owners as unknown as { id: string; display_name: string });
   const versionsByOwner = new Map<string, RosterVersion[]>();
@@ -157,6 +166,13 @@ export async function loadPlayoffs(db: SupabaseClient, now = new Date()): Promis
   const standings = rows
     .map((r) => ({ ...r, place: placed.get(r.ownerId)!.place, payoutCents: placed.get(r.ownerId)!.cents }))
     .sort((a, b) => a.place - b.place || a.ownerName.localeCompare(b.ownerName));
+
+  // Other owners' players stay hidden from the viewer until their team has played.
+  if (viewerId !== undefined) {
+    const teamOf = new Map(players.map((p) => [p.id, p.team]));
+    const hasPlayed = (id: string) => playedTeams.has(teamOf.get(id) ?? "");
+    for (const s of standings) if (s.ownerId !== viewerId) s.roster = hideUnplayed(s.roster, hasPlayed);
+  }
 
   return {
     seasonId: season.id,

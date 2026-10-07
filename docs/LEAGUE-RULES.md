@@ -24,7 +24,9 @@ per-season configuration, not hard-coded.
 - Any NFL player may be picked by any owner; duplicate lineups are allowed.
 - Each slot locks at that player's own NFL kickoff. The doubled designation locks when its player
   kicks off, and can never be moved onto a player whose game has started.
-- All lineups, including partial ones, are visible to every owner as soon as they are saved.
+- Other owners' picks (and their x2) are hidden until that player's game kicks off; how many slots
+  each owner has filled ("6/8") is always visible. The commissioner sees the same as everyone
+  else, except when opening an owner's lineup on the Fix a lineup screen. (Since Week 5, 2026.)
 
 ## Scoring
 ### Passing (QB)
@@ -144,6 +146,7 @@ One cumulative contest from the Wild Card round through the Super Bowl. Highest 
   player moves into that reserve spot, which is then used up: at most 2 substitutions per owner.
 - An unused reserve can be renamed at any time.
 - Display: eliminated players are red (active or reserve); live reserves are green.
+- Other owners' playoff players (actives and reserves) are hidden until that player's team has played.
 - The active lineup always keeps the regular-season structure: 1 QB, 2 RB, 3 WR/TE, 1 K, 1 DEF.
   A reserve can only replace a player in a slot it is eligible for. Eliminated players stay in their
   slot (scoring nothing) until swapped out, so a late-round lineup may effectively have no live QB

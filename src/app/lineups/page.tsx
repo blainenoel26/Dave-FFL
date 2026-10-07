@@ -35,7 +35,7 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
   const stored = week.status === "final" || week.status === "closed";
   const [players, lineups, scores, storedPoints] = await Promise.all([
     getPlayerOptions(db, week),
-    getWeekLineups(db, week),
+    getWeekLineups(db, week, owner?.id ?? null),
     getWeekScores(week.seasonYear, week.number, RULES_2026).catch(() => null),
     stored ? getStoredPoints(db, week.id) : null,
   ]);
@@ -68,7 +68,7 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
   const ordered = started
     ? [...lineups].sort((a, b) => placeOf.get(a.ownerId)!.place - placeOf.get(b.ownerId)!.place)
     : lineups;
-  const submitted = lineups.filter((l) => l.picks.length > 0).length;
+  const submitted = lineups.filter((l) => l.filledSlots.length > 0).length;
 
   return (
     <>
@@ -124,8 +124,9 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
         )}
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {ordered.filter((l) => !stored || l.picks.length > 0).map((lineup) => {
+          {ordered.filter((l) => !stored || l.filledSlots.length > 0).map((lineup) => {
             const bySlot = new Map(lineup.picks.map((p) => [p.slot, p]));
+            const filled = new Set(lineup.filledSlots);
             const standing = placeOf.get(lineup.ownerId)!;
             return (
               <section
@@ -140,7 +141,7 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
                   {started ? (
                     <span className="tabular-nums">{standing.points} pts</span>
                   ) : (
-                    <span className="text-xs font-normal text-muted">{lineup.picks.length}/8</span>
+                    <span className="text-xs font-normal text-muted">{lineup.filledSlots.length}/8</span>
                   )}
                 </h2>
                 <ul className="text-sm">
@@ -167,6 +168,8 @@ export default async function LineupsPage(props: PageProps<"/lineups">) {
                               </span>
                             )}
                           </>
+                        ) : filled.has(slot) ? (
+                          <span className="text-muted">🔒 Hidden until kickoff</span>
                         ) : (
                           <span className="text-muted">—</span>
                         )}

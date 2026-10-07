@@ -13,7 +13,7 @@ export async function savePlayoffRoster(roster: PlayoffRoster): Promise<SaveResu
   const owner = await getCurrentOwner();
   if (!owner) return { ok: false, error: "You are not signed in as a league owner" };
 
-  const view = await loadPlayoffs(await createClient());
+  const view = await loadPlayoffs(await createClient(), owner.id);
   if (!view || view.players.length === 0) return { ok: false, error: "Playoff picks aren't open yet" };
   const mine = view.standings.find((s) => s.ownerId === owner.id);
   if (!mine) return { ok: false, error: "You aren't in this season's playoffs" };

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Position } from "../league/lineup";
 import {
+  HIDDEN_PLAYER,
   eliminatedTeams,
+  hideUnplayed,
   emptyRoster,
   playerStatus,
   playoffTotal,
@@ -144,5 +146,24 @@ describe("eliminations", () => {
     expect(playerStatus("GB", out, true)).toBe("eliminated");
     expect(playerStatus("PHI", out, true)).toBe("reserve");
     expect(playerStatus("PHI", out, false)).toBe("active");
+  });
+});
+
+describe("hideUnplayed", () => {
+  it("hides players who haven't played, actives and reserves, and an unplayed x2", () => {
+    const played = new Set(["qb1", "rb1", "wr4"]);
+    const shown = hideUnplayed(roster({ doubled: "RB2" }), (id) => played.has(id));
+    expect(shown.actives.QB).toBe("qb1");
+    expect(shown.actives.RB2).toBe(HIDDEN_PLAYER);
+    expect(shown.doubled).toBeNull();
+    expect(shown.reserves.R1.playerId).toBe(HIDDEN_PLAYER);
+    expect(shown.reserves.R2.playerId).toBe("wr4");
+  });
+
+  it("shows the x2 once its player has played, and leaves empty spots empty", () => {
+    const shown = hideUnplayed({ ...emptyRoster(), actives: { RB1: "rb1" }, doubled: "RB1" }, () => true);
+    expect(shown.doubled).toBe("RB1");
+    expect(shown.actives.QB).toBeUndefined();
+    expect(shown.reserves.R1.playerId).toBeNull();
   });
 });

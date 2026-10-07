@@ -8,9 +8,9 @@ export default async function Home() {
   const owner = await getCurrentOwner();
   const db = await createClient();
   const week = owner ? await getCurrentWeek(db) : null;
-  const lineups = week ? await getWeekLineups(db, week) : [];
+  const lineups = week ? await getWeekLineups(db, week, owner?.id ?? null) : [];
   const mine = lineups.find((l) => l.ownerId === owner?.id);
-  const submitted = lineups.filter((l) => l.picks.length > 0).length;
+  const submitted = lineups.filter((l) => l.filledSlots.length > 0).length;
   const firstKickoff = week?.games.find((g) => g.status === "scheduled")?.kickoff;
 
   return (

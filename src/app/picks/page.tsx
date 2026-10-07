@@ -20,7 +20,7 @@ export default async function PicksPage() {
     );
   }
 
-  const [players, lineups] = await Promise.all([getPlayerOptions(db, week), getWeekLineups(db, week)]);
+  const [players, lineups] = await Promise.all([getPlayerOptions(db, week), getWeekLineups(db, week, owner.id)]);
   const mine = lineups.find((l) => l.ownerId === owner.id)?.picks ?? [];
   const initialPicks = Object.fromEntries(mine.map((p) => [p.slot, p.playerId])) as Partial<Record<Slot, string>>;
   const initialDoubled = mine.find((p) => p.doubled)?.slot ?? null;

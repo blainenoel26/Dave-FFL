@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import type { Slot } from "@/lib/league/lineup";
 import { getPlayerOptions, getWeek, getWeekLineups } from "@/lib/league/week";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
 import { LineupEditor } from "@/app/picks/lineup-editor";
 import { commishSaveLineup } from "../actions";
@@ -22,7 +23,9 @@ export default async function CommishLineupPage(props: PageProps<"/commish/lineu
 
   const db = await createClient();
   const week = await getWeek(db, typeof weekParam === "string" ? Number(weekParam) : null);
-  const lineups = week ? await getWeekLineups(db, week) : [];
+  // The one place the commissioner sees an owner's picks before kickoff: opening a lineup to fix it
+  // (checked above; every fix is logged). Read on the server, past the hide-until-kickoff rule.
+  const lineups = week ? await getWeekLineups(createAdminClient(), week) : [];
   const target = lineups.find((l) => l.ownerId === ownerParam);
   if (!week || !target) {
     return (

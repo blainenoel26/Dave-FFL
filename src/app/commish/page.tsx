@@ -35,7 +35,7 @@ export default async function CommishPage(props: PageProps<"/commish">) {
 
   const [players, lineups, scores, stored, overrides] = await Promise.all([
     getPlayerOptions(db, week),
-    getWeekLineups(db, week),
+    getWeekLineups(db, week, owner.id),
     getWeekScores(week.seasonYear, week.number, RULES_2026).catch(() => null),
     week.status === "final" || week.status === "closed" ? getStoredPoints(db, week.id) : null,
     db
@@ -122,7 +122,7 @@ export default async function CommishPage(props: PageProps<"/commish">) {
                     className="flex justify-between py-2"
                   >
                     <span>{l.ownerName}</span>
-                    <span className="text-muted">{l.picks.length}/8 ›</span>
+                    <span className="text-muted">{l.filledSlots.length}/8 ›</span>
                   </Link>
                 </li>
               ))}
