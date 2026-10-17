@@ -187,7 +187,7 @@ export async function getWeekLineups(
   }
 
   // Kickoff for each picked player, so other owners' unstarted picks can be hidden.
-  let kickoffOf = (_playerId: string): string | null => null;
+  let kickoffOf: (playerId: string) => string | null = () => null;
   if (viewerId !== undefined) {
     const ids = [...new Set([...picksByOwner.values()].flat().map((p) => p.playerId))];
     const { data: teams } = ids.length
