@@ -9,7 +9,6 @@ import {
   fetchMessages,
   markBanterRead,
   postMessage,
-  setDigest,
   toggleReaction,
   type ActionResult,
 } from "./actions";
@@ -33,7 +32,6 @@ export function BanterChat(props: {
   initial: BanterMessage[];
   meId: string;
   isCommissioner: boolean;
-  digestOn: boolean;
 }) {
   const { meId, isCommissioner } = props;
   const [messages, setMessages] = useState(props.initial);
@@ -42,7 +40,6 @@ export function BanterChat(props: {
   const [editing, setEditing] = useState<{ id: number; text: string } | null>(null);
   const [picker, setPicker] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [digestOn, setDigestOn] = useState(props.digestOn);
   const [pending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -103,19 +100,6 @@ export function BanterChat(props: {
 
   return (
     <div className="flex flex-col gap-3 pb-40">
-      <label className="flex items-center gap-2 text-sm text-muted">
-        <input
-          type="checkbox"
-          checked={digestOn}
-          onChange={(e) => {
-            const on = e.target.checked;
-            setDigestOn(on);
-            run(() => setDigest(on));
-          }}
-        />
-        Email me a daily summary of new messages
-      </label>
-
       {hasOlder && (
         <button type="button" onClick={() => void loadOlder()} className="text-sm text-muted underline">
           Show earlier messages

@@ -21,15 +21,11 @@ create table public.banter_reactions (
 -- Deleted reactions must carry the whole row in real-time events.
 alter table public.banter_reactions replica identity full;
 
--- Per owner: when they last read Banter (unread count) and when their last digest went out.
+-- Per owner: when they last opened Banter (for the unread count).
 create table public.banter_reads (
-  owner_id       uuid primary key references public.owners (id) on delete cascade,
-  last_read_at   timestamptz not null default now(),
-  last_digest_at timestamptz
+  owner_id     uuid primary key references public.owners (id) on delete cascade,
+  last_read_at timestamptz not null default now()
 );
-
--- Daily digest email, on unless the owner turns it off.
-alter table public.owners add column banter_digest boolean not null default true;
 
 -- ── Row-level security ──────────────────────────────────────────────────────
 alter table public.banter_messages enable row level security;

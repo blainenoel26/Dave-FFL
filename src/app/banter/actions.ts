@@ -1,8 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { MAX_MESSAGE_LENGTH, REACTIONS, loadMessages, markRead, type BanterMessage, type Reaction } from "@/lib/banter/data";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -84,10 +82,3 @@ export async function markBanterRead(): Promise<void> {
   await markRead(await createClient(), owner.id);
 }
 
-export async function setDigest(on: boolean): Promise<ActionResult> {
-  const owner = await me();
-  const { error } = await createAdminClient().from("owners").update({ banter_digest: on }).eq("id", owner.id);
-  if (error) return { ok: false, error: error.message };
-  revalidatePath("/banter");
-  return { ok: true };
-}

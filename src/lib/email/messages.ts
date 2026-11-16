@@ -69,37 +69,3 @@ export function resultsEmail(input: {
   };
 }
 
-export interface DigestLine {
-  author: string;
-  at: string; // already formatted, e.g. "Sun 4:12 PM ET"
-  body: string;
-}
-
-const DIGEST_SHOWN = 10;
-
-export function banterDigestEmail(input: {
-  ownerName: string;
-  lines: DigestLine[]; // oldest first
-  url: string;
-}): { subject: string; text: string } {
-  const total = input.lines.length;
-  const shown = input.lines.slice(-DIGEST_SHOWN);
-  const clip = (s: string) => (s.length > 280 ? `${s.slice(0, 277)}…` : s);
-  return {
-    subject: `Dave FFL Banter: ${total} new message${total === 1 ? "" : "s"}`,
-    text: [
-      `Hi ${input.ownerName},`,
-      "",
-      total > shown.length
-        ? `${total} new messages in Banter. The latest ${shown.length}:`
-        : `${total} new message${total === 1 ? "" : "s"} in Banter:`,
-      "",
-      ...shown.flatMap((l) => [`${l.author} (${l.at}):`, clip(l.body), ""]),
-      `Join in: ${input.url}/banter`,
-      "",
-      "Turn these emails off on the Banter page.",
-      "",
-      "Dave FFL",
-    ].join("\n"),
-  };
-}

@@ -17,10 +17,7 @@ export default async function BanterPage() {
   }
 
   const db = await createClient();
-  const [messages, { data: me }] = await Promise.all([
-    loadMessages(db),
-    db.from("owners").select("banter_digest").eq("id", owner.id).single(),
-  ]);
+  const messages = await loadMessages(db);
   // Opening Banter marks everything read (before the header counts unread messages).
   await markRead(db, owner.id);
 
@@ -36,7 +33,6 @@ export default async function BanterPage() {
           initial={messages}
           meId={owner.id}
           isCommissioner={owner.role === "commissioner"}
-          digestOn={me?.banter_digest ?? true}
         />
       </main>
     </>

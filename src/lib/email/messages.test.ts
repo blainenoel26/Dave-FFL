@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { banterDigestEmail, reminderEmail, resultsEmail } from "./messages";
+import { reminderEmail, resultsEmail } from "./messages";
 
 const url = "https://example.test";
 
@@ -33,23 +33,3 @@ describe("resultsEmail", () => {
   });
 });
 
-describe("banterDigestEmail", () => {
-  it("counts the messages and shows them with authors", () => {
-    const email = banterDigestEmail({
-      ownerName: "Sam",
-      lines: [{ author: "Pat", at: "Sun 4:12 PM ET", body: "Nice x2 on the kicker." }],
-      url,
-    });
-    expect(email.subject).toBe("Dave FFL Banter: 1 new message");
-    expect(email.text).toContain("Pat (Sun 4:12 PM ET):\nNice x2 on the kicker.");
-    expect(email.text).toContain(`${url}/banter`);
-  });
-
-  it("shows only the latest 10 of a long day", () => {
-    const lines = Array.from({ length: 14 }, (_, i) => ({ author: "Pat", at: "now", body: `msg ${i}` }));
-    const email = banterDigestEmail({ ownerName: "Sam", lines, url });
-    expect(email.text).toContain("14 new messages in Banter. The latest 10:");
-    expect(email.text).not.toContain("msg 3\n");
-    expect(email.text).toContain("msg 13");
-  });
-});
