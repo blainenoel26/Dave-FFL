@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { sendBanterDigests } from "@/lib/banter/digest";
 import { rejectUnlessCron } from "@/lib/cron";
 import { sendWeekResults } from "@/lib/email/league";
 import { emailConfigured } from "@/lib/email/send";
@@ -7,7 +8,7 @@ import { finalizePlayoffs } from "@/lib/playoffs/finalize";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Runs daily (vercel.json → crons). Finalizes weeks whose games are all final, emails the results
-// the first time, and closes weeks whose commissioner window has passed.
+// the first time, closes weeks whose commissioner window has passed, and sends the Banter digest.
 export async function GET(request: NextRequest) {
   const rejected = rejectUnlessCron(request);
   if (rejected) return rejected;
@@ -57,6 +58,15 @@ export async function GET(request: NextRequest) {
   if (superBowl && superBowl.status !== "final" && superBowl.status !== "closed") {
     const outcome = await finalizePlayoffs(admin);
     report.playoffs = outcome.status === "finalized" ? "finalized" : `skipped: ${outcome.reason}`;
+  }
+
+  // Daily Banter digest for owners with unread messages (Vercel's free plan allows only two crons).
+  if (emailConfigured()) {
+    try {
+      report.banterDigest = `sent to ${await sendBanterDigests(admin)}`;
+    } catch (e) {
+      report.banterDigest = `failed: ${(e as Error).message}`;
+    }
   }
 
   return NextResponse.json({ ok: true, report });
