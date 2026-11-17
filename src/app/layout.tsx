@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Dave FFL",
   description: "Weekly pick'em league: lineups, live scores and payouts.",
+  // Added to an iPhone home screen, open full screen like an app.
+  appleWebApp: { capable: true, title: "Dave FFL", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

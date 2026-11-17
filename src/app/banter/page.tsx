@@ -2,6 +2,7 @@ import { AppHeader } from "@/components/app-header";
 import { loadMessages, markRead } from "@/lib/banter/data";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
 import { BanterChat } from "./chat";
+import { IconBadgeSetup } from "./icon-badge-setup";
 
 export default async function BanterPage() {
   const owner = await getCurrentOwner();
@@ -29,6 +30,7 @@ export default async function BanterPage() {
           <h1 className="text-xl font-semibold">Banter</h1>
           <p className="text-sm text-muted">The whole league sees this. Keep it fun.</p>
         </div>
+        <IconBadgeSetup />
         <BanterChat
           initial={messages}
           meId={owner.id}

@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/auth/confirm", "/api/cron"];
+// The app icon and manifest must load without a sign-in, or phones can't install the app.
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/auth/confirm", "/api/cron", "/icon", "/apple-icon", "/manifest.webmanifest"];
 
 // Refreshes the Supabase session cookie on every request and sends signed-out visitors to /login.
 export async function proxy(request: NextRequest) {
