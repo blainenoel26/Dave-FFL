@@ -2,20 +2,27 @@ import Link from "next/link";
 import { signOut } from "@/app/login/actions";
 import { unreadCount } from "@/lib/banter/data";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
+import { BanterLink } from "./banter-link";
 
 export async function AppHeader() {
   const owner = await getCurrentOwner();
   const unread = owner ? await unreadCount(await createClient(), owner.id) : 0;
 
-  const links = [
+  const before = [
     { href: "/picks", label: "Picks" },
     { href: "/lineups", label: "Lineups" },
-    { href: "/banter", label: unread ? `Banter (${unread > 99 ? "99+" : unread})` : "Banter", highlight: unread > 0 },
+  ];
+  const after = [
     { href: "/money", label: "Money" },
     { href: "/playoffs", label: "Playoffs" },
     { href: "/scoring", label: "Scoring" },
     ...(owner?.role === "commissioner" ? [{ href: "/commish", label: "Commish" }] : []),
   ];
+  const link = (l: { href: string; label: string }) => (
+    <Link key={l.href} href={l.href} className="text-muted hover:text-foreground">
+      {l.label}
+    </Link>
+  );
 
   return (
     <header className="border-b border-border bg-surface">
@@ -23,15 +30,9 @@ export async function AppHeader() {
         <Link href="/" className="font-semibold">
           Dave FFL
         </Link>
-        {links.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className={"highlight" in l && l.highlight ? "font-semibold text-accent" : "text-muted hover:text-foreground"}
-          >
-            {l.label}
-          </Link>
-        ))}
+        {before.map(link)}
+        {owner && <BanterLink initialUnread={unread} />}
+        {after.map(link)}
         <form action={signOut} className="ml-auto">
           <button className="text-muted underline">Sign out</button>
         </form>

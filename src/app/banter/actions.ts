@@ -1,6 +1,6 @@
 "use server";
 
-import { MAX_MESSAGE_LENGTH, REACTIONS, loadMessages, markRead, type BanterMessage, type Reaction } from "@/lib/banter/data";
+import { MAX_MESSAGE_LENGTH, REACTIONS, loadMessages, markRead, unreadCount, type BanterMessage, type Reaction } from "@/lib/banter/data";
 import { createClient, getCurrentOwner } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -82,3 +82,9 @@ export async function markBanterRead(): Promise<void> {
   await markRead(await createClient(), owner.id);
 }
 
+
+/** Unread messages from other owners (0 when signed out). */
+export async function getUnreadCount(): Promise<number> {
+  const owner = await getCurrentOwner();
+  return owner ? unreadCount(await createClient(), owner.id) : 0;
+}
