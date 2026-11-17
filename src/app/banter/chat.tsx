@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { MAX_MESSAGE_LENGTH, PAGE_SIZE, REACTIONS, type BanterMessage, type Reaction } from "@/lib/banter/data";
 import { createClient } from "@/lib/supabase/browser";
 import {
@@ -41,7 +41,6 @@ export function BanterChat(props: {
   const [picker, setPicker] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const bottomRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
     const latest = await fetchMessages();
@@ -74,12 +73,6 @@ export function BanterChat(props: {
     };
   }, [refresh]);
 
-  // Keep the newest message in view.
-  const lastId = messages[messages.length - 1]?.id;
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [lastId]);
-
   function run(action: () => Promise<ActionResult>, after?: () => void) {
     setError(null);
     startTransition(async () => {
@@ -99,17 +92,46 @@ export function BanterChat(props: {
   }
 
   return (
-    <div className="flex flex-col gap-3 pb-40">
-      {hasOlder && (
-        <button type="button" onClick={() => void loadOlder()} className="text-sm text-muted underline">
-          Show earlier messages
-        </button>
-      )}
+    <div className="flex flex-col gap-3">
+      <form
+        className="card flex flex-col gap-1 p-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const text = draft;
+          run(() => postMessage(text), () => setDraft(""));
+        }}
+      >
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <div className="flex items-end gap-2">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window)) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
+            maxLength={MAX_MESSAGE_LENGTH}
+            rows={2}
+            placeholder="Talk some trash…"
+            className="min-h-12 flex-1 resize-none rounded-lg border border-border bg-surface p-2 text-base outline-none focus:border-accent"
+          />
+          <button type="submit" disabled={pending || !draft.trim()} className="btn-primary w-auto px-5">
+            Send
+          </button>
+        </div>
+        {draft.length > MAX_MESSAGE_LENGTH - 100 && (
+          <p className="text-xs text-muted">
+            {draft.length}/{MAX_MESSAGE_LENGTH}
+          </p>
+        )}
+      </form>
 
       {messages.length === 0 && <p className="card text-sm text-muted">No messages yet. Start the trash talk.</p>}
 
       <ul className="flex flex-col gap-2">
-        {messages.map((m) => {
+        {[...messages].reverse().map((m) => {
           const mine = m.ownerId === meId;
           return (
             <li key={m.id} className={`card p-3 ${mine ? "border-accent" : ""}`}>
@@ -210,44 +232,13 @@ export function BanterChat(props: {
           );
         })}
       </ul>
-      <div ref={bottomRef} />
 
-      <form
-        className="fixed inset-x-0 bottom-0 border-t border-border bg-surface/95 px-4 py-3 backdrop-blur"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const text = draft;
-          run(() => postMessage(text), () => setDraft(""));
-        }}
-      >
-        <div className="mx-auto flex max-w-2xl flex-col gap-1">
-          {error && <p className="text-sm text-danger">{error}</p>}
-          <div className="flex items-end gap-2">
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window)) {
-                  e.preventDefault();
-                  e.currentTarget.form?.requestSubmit();
-                }
-              }}
-              maxLength={MAX_MESSAGE_LENGTH}
-              rows={2}
-              placeholder="Talk some trash…"
-              className="min-h-12 flex-1 resize-none rounded-lg border border-border bg-surface p-2 text-base outline-none focus:border-accent"
-            />
-            <button type="submit" disabled={pending || !draft.trim()} className="btn-primary w-auto px-5">
-              Send
-            </button>
-          </div>
-          {draft.length > MAX_MESSAGE_LENGTH - 100 && (
-            <p className="text-xs text-muted">
-              {draft.length}/{MAX_MESSAGE_LENGTH}
-            </p>
-          )}
-        </div>
-      </form>
+      {hasOlder && (
+        <button type="button" onClick={() => void loadOlder()} className="text-sm text-muted underline">
+          Show earlier messages
+        </button>
+      )}
+
     </div>
   );
 }
